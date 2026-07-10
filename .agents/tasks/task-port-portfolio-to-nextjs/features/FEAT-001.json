@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Install dependencies and port all portfolio components from Vite to Next.js App Router, including globals.css, layout.tsx, page.tsx, and all 6 components with proper 'use client' directives for interactive components.",
+  "status": "completed",
+  "steps": [
+    "Install framer-motion and lucide-react in /projects/sandbox/kiro-web-app/ using npm install",
+    "Replace app/globals.css with the portfolio's Tailwind v4 config including @theme colors (glass-bg, glass-border, glass-shadow, accent, accent-light, bg-primary, bg-secondary, text-primary, text-secondary), @layer base styles (smooth scroll, body gradient background), and @utility definitions (glass and glass-strong glassmorphism utilities). Keep the @import 'tailwindcss' at top.",
+    "Update app/layout.tsx: update metadata to title 'Aurora Chen - Digital Artist & Illustrator' and appropriate description. Keep the Geist font imports. Add className='h-full' to html element. Set body className to empty or just min-h-full since the gradient comes from CSS.",
+    "Create components/ directory at /projects/sandbox/kiro-web-app/components/",
+    "Port components/Navbar.tsx - add 'use client' directive at top since it uses useState, AnimatePresence, and event handlers. Keep all framer-motion animations, mobile menu toggle, glassmorphism nav styling. Import from 'framer-motion' and 'lucide-react'.",
+    "Port components/Hero.tsx - add 'use client' directive since it uses framer-motion animations. Keep decorative gradient blobs, glass card, animated heading/paragraph/CTA button.",
+    "Port components/About.tsx - add 'use client' directive since it uses framer-motion whileInView animations and variants. Keep skills grid with staggered animations.",
+    "Port components/Gallery.tsx - add 'use client' directive since it uses framer-motion whileInView and whileHover. Keep 8-artwork grid with gradient placeholders and hover overlays.",
+    "Port components/Contact.tsx - add 'use client' directive since it uses framer-motion whileInView. Keep custom SVG icons (XIcon, InstagramIcon, GithubIcon), social links, email link.",
+    "Port components/Footer.tsx - this one does NOT need 'use client' since it has no interactivity or client hooks. Keep the copyright with dynamic year using new Date().getFullYear().",
+    "Update app/page.tsx to import all components and compose them exactly like App.tsx did: Navbar, main wrapping Hero/About/Gallery/Contact, and Footer. Remove all existing template content."
+  ],
+  "acceptance_criteria": [
+    "npm run build completes with exit code 0",
+    "All 6 components exist in /projects/sandbox/kiro-web-app/components/ with correct content",
+    "Components using framer-motion or React hooks have 'use client' directive",
+    "app/globals.css contains the glassmorphism theme colors and utilities",
+    "app/page.tsx renders all portfolio sections",
+    "app/layout.tsx has updated metadata for the portfolio"
+  ],
+  "verification": [
+    "Run cd /projects/sandbox/kiro-web-app && npm run build and confirm exit code 0"
+  ],
+  "blocked_reason": null,
+  "findings": "Build completed successfully with Next.js 16.2.4 Turbopack. No test failures. Note: Next.js emits a warning about detecting multiple lockfiles (parent sandbox lockfile and kiro-web-app lockfile) but this does not affect the build. All components compile and static pages generate correctly."
+}
