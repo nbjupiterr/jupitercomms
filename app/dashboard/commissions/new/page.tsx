@@ -1,0 +1,214 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+
+const STATUSES = [
+  "waitlisted",
+  "queued",
+  "in_progress",
+  "completed",
+] as const;
+
+const STATUS_LABELS: Record<string, string> = {
+  waitlisted: "Waitlist",
+  queued: "In Queue",
+  in_progress: "In Progress",
+  completed: "Complete",
+};
+
+const COMMISSION_TYPES = [
+  "Character Illustration",
+  "Concept Art",
+  "Portrait",
+  "Full Scene",
+  "Chibi/Emote",
+  "Reference Sheet",
+  "Other",
+];
+
+export default function NewCommissionPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const supabase = createClient();
+    const form = new FormData(e.currentTarget);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setError("You must be logged in.");
+      setLoading(false);
+      return;
+    }
+
+    const priceRaw = form.get("price") as string;
+
+    const { count } = await supabase
+      .from("commissions")
+      .select("*", { count: "exact", head: true })
+      .eq("artist_id", user.id);
+
+    const { error: insertError } = await supabase.from("commissions").insert({
+      artist_id: user.id,
+      client_name: form.get("clientName") as string,
+      client_contact: (form.get("clientContact") as string) || null,
+      title: form.get("title") as string,
+      commission_type: (form.get("commissionType") as string) || null,
+      status: form.get("status") as string,
+      description: (form.get("description") as string) || null,
+      price: priceRaw ? Number(priceRaw) : null,
+      currency: form.get("currency") as string,
+      deadline: (form.get("deadline") as string) || null,
+      queue_order: (count ?? 0) + 1,
+    });
+
+    if (insertError) {
+      setError(insertError.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push("/dashboard/queue");
+    router.refresh();
+  };
+
+  return (
+    <div>
+      <Link href="/dashboard/queue" className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-navy mb-6 tracking-tight">
+        <span aria-hidden="true">←</span> Back to queue
+      </Link>
+
+      <h1 className="text-2xl font-semibold tracking-tight text-navy mb-2">New Commission</h1>
+      <p className="text-sm text-text-secondary mb-8">Capture client details, scope, and pricing.</p>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <div className="grid gap-6 lg:grid-cols-2 items-start">
+        <fieldset className="glass rounded-2xl p-6 flex flex-col gap-4">
+          <p className="text-sm font-semibold text-navy">Client</p>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm text-text-secondary">Client name</span>
+            <input
+              name="clientName"
+              type="text"
+              required
+              className="field-input"
+              placeholder="Display name"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm text-text-secondary">Contact</span>
+            <input
+              name="clientContact"
+              type="text"
+              className="field-input"
+              placeholder="Email, Discord, Twitter, etc."
+            />
+          </label>
+        </fieldset>
+
+        <fieldset className="glass rounded-2xl p-6 flex flex-col gap-4">
+          <p className="text-sm font-semibold text-navy">Pricing</p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm text-text-secondary">Price</span>
+              <input
+                name="price"
+                type="number"
+                min={0}
+                step={0.01}
+                className="field-input"
+                placeholder="0.00"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm text-text-secondary">Currency</span>
+              <select name="currency" className="field-input">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="CAD">CAD</option>
+                <option value="AUD">AUD</option>
+                <option value="JPY">JPY</option>
+              </select>
+            </label>
+          </div>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm text-text-secondary">Deadline</span>
+            <input
+              name="deadline"
+              type="date"
+              className="field-input"
+            />
+          </label>
+        </fieldset>
+        </div>
+
+        <fieldset className="glass rounded-2xl p-6 flex flex-col gap-4">
+          <p className="text-sm font-semibold text-navy">Details</p>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm text-text-secondary">Title</span>
+            <input
+              name="title"
+              type="text"
+              required
+              className="field-input"
+              placeholder="Commission title"
+            />
+          </label>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm text-text-secondary">Type</span>
+              <select name="commissionType" className="field-input">
+                {COMMISSION_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm text-text-secondary">Status</span>
+              <select name="status" className="field-input">
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm text-text-secondary">Description</span>
+            <textarea
+              name="description"
+              rows={4}
+              className="field-input resize-y"
+              placeholder="Requirements, references, style notes…"
+            />
+          </label>
+        </fieldset>
+
+        {error && (
+          <p className="text-sm text-error -mt-2">{error}</p>
+        )}
+
+        <div className="flex gap-3 justify-end">
+          <button type="button" onClick={() => router.back()} className="btn-ghost text-sm">
+            Cancel
+          </button>
+          <button type="submit" disabled={loading} className="btn-primary text-sm">
+            {loading ? "Creating…" : "Create commission"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
