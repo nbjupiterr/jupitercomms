@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Manrope, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
 });
 
@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aurora Chen - Digital Artist & Illustrator",
+  title: "Orbit by Jupiter - Commission Tracker",
   description:
-    "Portfolio of Aurora Chen, a multidisciplinary digital artist and illustrator crafting immersive visual worlds through concept art, character design, and motion graphics.",
+    "Track commission progress, manage your queue, and share live status updates with clients.",
 };
 
 export default function RootLayout({
@@ -24,8 +24,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
-      <body>{children}</body>
+    <html lang="en" className={`${manrope.variable} ${geistMono.variable} h-full`}>
+      <body className="h-full font-sans antialiased" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }
