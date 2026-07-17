@@ -21,9 +21,9 @@ export const Sidebar = ({ user: _user }: { user: User }) => {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const supabase = createClient();
 
   const handleLogout = async () => {
+    const supabase = createClient();
     await supabase.auth.signOut();
     router.replace("/login");
     router.refresh();
