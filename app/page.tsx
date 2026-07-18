@@ -45,7 +45,7 @@ export default function LandingPage() {
                 width={640}
                 height={640}
                 priority
-                className="w-full max-w-xl h-auto"
+                className="w-full max-w-xl h-auto animate-float"
               />
             </div>
           </div>
@@ -56,26 +56,26 @@ export default function LandingPage() {
             Built for commission workflows
           </h2>
           <p className="text-text-secondary max-w-xl mb-10 leading-relaxed">
-            Queue, progress, and client links in one calm workspace.
+            Queue, progress, and a single client link in one calm workspace.
           </p>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <FeatureCard
               index="01"
               title="Live Progress"
-              description="Status and percent complete update as you work. Clients see the truth, not silence."
+              description="Status and percent complete update as you work, so clients always see where things stand."
               image="/assets/outer-space-amico.svg"
             />
             <FeatureCard
               index="02"
               title="Queue Position"
-              description="Show exactly where each client sits in line. Fewer pings. Clearer expectations."
+              description="Show clients exactly where they sit in line, so expectations stay clear."
               image="/assets/outer-space-bro.svg"
             />
             <FeatureCard
               index="03"
               title="Tracking Links"
-              description="One private link per commission. Open anytime to check status and progress."
+              description="One private link to your queue. Clients open it anytime to check status and progress."
               image="/assets/solar-system-amico.svg"
             />
           </div>

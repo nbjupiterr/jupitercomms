@@ -45,7 +45,7 @@ export const Sidebar = ({ user: _user }: { user: User }) => {
 
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 w-56 bg-bg-card/95 backdrop-blur-xl border-r border-glass-border flex flex-col
+          fixed inset-y-0 left-0 z-50 w-full lg:w-56 bg-bg-card/95 backdrop-blur-xl border-r border-glass-border flex flex-col
           transform transition-transform duration-200
           lg:static lg:translate-x-0
           ${open ? "translate-x-0" : "-translate-x-full"}
