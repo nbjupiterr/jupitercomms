@@ -6,6 +6,11 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type PriceTable = {
+  columns: string[]
+  rows: string[][]
+}
+
 export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
@@ -17,9 +22,12 @@ export type Database = {
           availability_message: string | null
           availability_status: string
           available_slots: number | null
+          contact_email: string | null
           created_at: string
           display_name: string | null
+          price_table: PriceTable | Json
           public_queue_token: string
+          tos_markdown: string | null
           updated_at: string
           user_id: string
         }
@@ -27,9 +35,12 @@ export type Database = {
           availability_message?: string | null
           availability_status?: string
           available_slots?: number | null
+          contact_email?: string | null
           created_at?: string
           display_name?: string | null
+          price_table?: PriceTable | Json
           public_queue_token?: string
+          tos_markdown?: string | null
           updated_at?: string
           user_id: string
         }
@@ -37,9 +48,12 @@ export type Database = {
           availability_message?: string | null
           availability_status?: string
           available_slots?: number | null
+          contact_email?: string | null
           created_at?: string
           display_name?: string | null
+          price_table?: PriceTable | Json
           public_queue_token?: string
+          tos_markdown?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -110,6 +124,60 @@ export type Database = {
           },
         ]
       }
+      gallery_items: {
+        Row: {
+          artist_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          sort_order: number
+          storage_path: string
+        }
+        Insert: {
+          artist_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          sort_order?: number
+          storage_path: string
+        }
+        Update: {
+          artist_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          sort_order?: number
+          storage_path?: string
+        }
+        Relationships: []
+      }
+      social_links: {
+        Row: {
+          artist_id: string
+          created_at: string
+          id: string
+          platform: string
+          sort_order: number
+          url: string
+        }
+        Insert: {
+          artist_id?: string
+          created_at?: string
+          id?: string
+          platform: string
+          sort_order?: number
+          url: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          id?: string
+          platform?: string
+          sort_order?: number
+          url?: string
+        }
+        Relationships: []
+      }
       workflow_stages: {
         Row: {
           artist_id: string
@@ -149,6 +217,18 @@ export type Database = {
           availability_message: string
           availability_status: string
           available_slots: number
+          contact_email: string | null
+          price_table: PriceTable | Json
+          tos_markdown: string | null
+        }[]
+      }
+      get_public_gallery: {
+        Args: { p_token: string }
+        Returns: {
+          caption: string | null
+          id: string
+          sort_order: number
+          storage_path: string
         }[]
       }
       get_public_queue: {
@@ -161,6 +241,15 @@ export type Database = {
           stage_name: string | null
           queue_position: number
           status: string
+        }[]
+      }
+      get_public_socials: {
+        Args: { p_token: string }
+        Returns: {
+          id: string
+          platform: string
+          sort_order: number
+          url: string
         }[]
       }
     }
@@ -196,10 +285,8 @@ export type Tables<
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -255,43 +342,3 @@ export type TablesUpdate<
       ? U
       : never
     : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const

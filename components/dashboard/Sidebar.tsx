@@ -12,8 +12,6 @@ import { BrandMark } from "@/components/Brand";
 const navItems = [
   { href: "/dashboard", label: "Hub" },
   { href: "/dashboard/queue", label: "Queue" },
-  { href: "/dashboard/workflow", label: "Workflow" },
-  { href: "/dashboard/availability", label: "Availability" },
   { href: "/dashboard/settings", label: "Settings" },
 ];
 

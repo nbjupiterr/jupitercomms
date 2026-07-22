@@ -2,21 +2,30 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KanbanBoard } from "./KanbanBoard";
+import { ActivityStrip } from "@/components/dashboard/ActivityStrip";
 
 export default async function QueuePage() {
   const supabase = await createClient();
 
-  const { data: items } = await supabase
-    .from("commissions")
-    .select("*")
-    .order("queue_order", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: true });
+  const [{ data: items }, { data: active }] = await Promise.all([
+    supabase
+      .from("commissions")
+      .select("*")
+      .order("queue_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("commissions")
+      .select("*")
+      .in("status", ["waitlisted", "queued", "in_progress"])
+      .order("queue_order", { ascending: true, nullsFirst: false })
+      .limit(8),
+  ]);
 
   const commissions = items ?? [];
 
   return (
     <div>
-      <header className="flex items-center justify-between gap-4 mb-6">
+      <header className="flex items-center justify-between gap-4 mb-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-navy">Queue</h1>
           <p className="text-text-secondary text-sm mt-1 leading-relaxed max-w-xl">
@@ -27,6 +36,8 @@ export default async function QueuePage() {
           New
         </Link>
       </header>
+
+      <ActivityStrip items={active ?? []} />
 
       {commissions.length === 0 ? (
         <div className="glass empty-state">
