@@ -161,11 +161,19 @@ export function ClientPage({
             )}
 
             {tab === "prices" && (
-              !hasPrices ? (
+              !hasPrices && !artist.prices_description?.trim() ? (
                 <p className="text-sm text-text-secondary text-center py-8">Prices coming soon.</p>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {priceTables.map((table) => (
+                  {artist.prices_description?.trim() ? (
+                    <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">
+                      {artist.prices_description.trim()}
+                    </p>
+                  ) : null}
+                  {!hasPrices ? (
+                    <p className="text-sm text-text-secondary text-center py-4">No tables yet.</p>
+                  ) : (
+                    priceTables.map((table) => (
                     <div
                       key={table.id}
                       className="rounded-xl border border-glass-border bg-bg-secondary/40 overflow-hidden"
@@ -215,7 +223,8 @@ export function ClientPage({
                         </div>
                       )}
                     </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               )
             )}

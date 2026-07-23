@@ -11,6 +11,7 @@ export type PublicArtist = {
   price_table: PriceTable | unknown;
   additionals_table?: PriceTable | unknown;
   price_tables?: NamedPriceTable[] | unknown;
+  prices_description?: string | null;
   kanban_columns?: KanbanColumn[] | unknown;
   tat_min_days?: number | null;
   tat_max_days?: number | null;

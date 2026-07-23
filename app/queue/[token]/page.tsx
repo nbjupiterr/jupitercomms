@@ -77,6 +77,7 @@ export default async function PublicQueuePage({ params }: { params: Promise<{ to
         price_table: artist.price_table,
         additionals_table: artist.additionals_table,
         price_tables: artist.price_tables,
+        prices_description: artist.prices_description ?? null,
         kanban_columns: artist.kanban_columns,
         tat_min_days: artist.tat_min_days ?? null,
         tat_max_days: artist.tat_max_days ?? null,

@@ -77,6 +77,7 @@ export function HubEditor({
   const [priceTables, setPriceTables] = useState<NamedPriceTable[]>(() =>
     normalizePriceTables(profile.price_tables, profile.price_table, profile.additionals_table)
   );
+  const [pricesDescription, setPricesDescription] = useState(profile.prices_description ?? "");
   const [gallery, setGallery] = useState(initialGallery);
   const [socials, setSocials] = useState(initialSocials);
   const [saving, setSaving] = useState(false);
@@ -157,6 +158,7 @@ export function HubEditor({
         availability_override: override,
         tos_markdown: tos ? sanitizeTosHtml(tos) : null,
         contact_email: email || null,
+        prices_description: pricesDescription.trim() || null,
         price_tables: priceTables,
         price_table: priceTables[0]
           ? { columns: priceTables[0].columns, rows: priceTables[0].rows }
@@ -234,7 +236,19 @@ export function HubEditor({
         {tab === "prices" && (
           <div className="flex flex-col gap-3">
             <h2 className="text-sm font-semibold text-navy">Prices</h2>
-            <p className="text-xs text-text-muted -mt-1">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs text-text-muted">
+                Description (shown above your tables on the client page)
+              </span>
+              <textarea
+                value={pricesDescription}
+                onChange={(e) => setPricesDescription(e.target.value)}
+                rows={3}
+                className="field-input resize-y text-sm"
+                placeholder="Payment terms, what’s included, currency notes…"
+              />
+            </label>
+            <p className="text-xs text-text-muted">
               Add as many tables as you need — rename or delete each one.
             </p>
             <PriceTablesEditor tables={priceTables} onChange={setPriceTables} />

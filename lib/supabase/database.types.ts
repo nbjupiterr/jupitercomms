@@ -29,6 +29,7 @@ export type Database = {
           kanban_columns: Json
           price_table: PriceTable | Json
           price_tables: Json
+          prices_description: string | null
           public_queue_token: string
           tat_max_days: number | null
           tat_min_days: number | null
@@ -52,6 +53,7 @@ export type Database = {
           limited_threshold?: number | null
           price_table?: PriceTable | Json
           price_tables?: Json
+          prices_description?: string | null
           public_queue_token?: string
           tat_max_days?: number | null
           tat_min_days?: number | null
@@ -73,6 +75,7 @@ export type Database = {
           limited_threshold?: number | null
           price_table?: PriceTable | Json
           price_tables?: Json
+          prices_description?: string | null
           public_queue_token?: string
           tat_max_days?: number | null
           tat_min_days?: number | null
@@ -296,6 +299,7 @@ export type Database = {
           kanban_columns: Json
           price_table: PriceTable | Json
           price_tables: Json
+          prices_description: string | null
           tat_max_days: number | null
           tat_min_days: number | null
           limited_threshold: number | null
