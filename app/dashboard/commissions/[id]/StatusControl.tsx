@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { syncEstimatedDeadlines } from "@/lib/sync-deadlines";
 import { syncAvailabilityStatus } from "@/lib/sync-availability";
+import { archiveCommissionEarnings, syncEarningsFromCommission } from "@/lib/earnings";
 
 const STATUSES = [
   "waitlisted",
@@ -41,6 +42,14 @@ export function StatusControl({
       data: { user },
     } = await supabase.auth.getUser();
     await supabase.from("commissions").update({ status: next }).eq("id", commissionId);
+    const { data: row } = await supabase
+      .from("commissions")
+      .select(
+        "id, artist_id, title, client_name, price, currency, status, created_at, updated_at"
+      )
+      .eq("id", commissionId)
+      .maybeSingle();
+    if (row) await syncEarningsFromCommission(supabase, row);
     if (user) {
       await syncEstimatedDeadlines(supabase, user.id);
       await syncAvailabilityStatus(supabase, user.id);
@@ -59,6 +68,7 @@ export function StatusControl({
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    await archiveCommissionEarnings(supabase, commissionId);
     await supabase.from("commissions").delete().eq("id", commissionId);
     if (user) {
       await syncEstimatedDeadlines(supabase, user.id);

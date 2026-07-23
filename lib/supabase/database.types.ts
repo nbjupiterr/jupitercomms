@@ -148,6 +148,56 @@ export type Database = {
           },
         ]
       }
+      earnings_entries: {
+        Row: {
+          amount: number
+          artist_id: string
+          client_name: string
+          commission_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          kind: string
+          occurred_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          artist_id: string
+          client_name: string
+          commission_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          kind: string
+          occurred_at?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          artist_id?: string
+          client_name?: string
+          commission_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          kind?: string
+          occurred_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "earnings_entries_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: true
+            referencedRelation: "commissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gallery_items: {
         Row: {
           artist_id: string

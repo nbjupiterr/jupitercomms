@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { syncEstimatedDeadlines } from "@/lib/sync-deadlines";
 import { syncAvailabilityStatus } from "@/lib/sync-availability";
+import { syncEarningsFromCommission } from "@/lib/earnings";
 import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currencies";
 import {
   estimateForPosition,
@@ -109,19 +110,25 @@ export default function NewCommissionPage() {
         ? estimateForPosition(workCount + 1, tat).max
         : null;
 
-    const { error: insertError } = await supabase.from("commissions").insert({
-      artist_id: user.id,
-      client_name: form.get("clientName") as string,
-      client_contact: (form.get("clientContact") as string) || null,
-      title: form.get("title") as string,
-      commission_type: (form.get("commissionType") as string) || null,
-      status: nextStatus,
-      description: (form.get("description") as string) || null,
-      price: priceRaw ? Number(priceRaw) : null,
-      currency: form.get("currency") as string,
-      deadline,
-      queue_order: (count ?? 0) + 1,
-    });
+    const { data: created, error: insertError } = await supabase
+      .from("commissions")
+      .insert({
+        artist_id: user.id,
+        client_name: form.get("clientName") as string,
+        client_contact: (form.get("clientContact") as string) || null,
+        title: form.get("title") as string,
+        commission_type: (form.get("commissionType") as string) || null,
+        status: nextStatus,
+        description: (form.get("description") as string) || null,
+        price: priceRaw ? Number(priceRaw) : null,
+        currency: form.get("currency") as string,
+        deadline,
+        queue_order: (count ?? 0) + 1,
+      })
+      .select(
+        "id, artist_id, title, client_name, price, currency, status, created_at, updated_at"
+      )
+      .single();
 
     if (insertError) {
       setError(insertError.message);
@@ -129,6 +136,7 @@ export default function NewCommissionPage() {
       return;
     }
 
+    if (created) await syncEarningsFromCommission(supabase, created);
     await syncEstimatedDeadlines(supabase, user.id, tat);
     await syncAvailabilityStatus(supabase, user.id);
 

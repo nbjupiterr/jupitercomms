@@ -1,19 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { EarningsView } from "@/components/dashboard/EarningsView";
+import { getAuthUser } from "@/lib/supabase/auth";
 
 export default async function EarningsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) redirect("/login");
 
-  const { data: commissions } = await supabase
-    .from("commissions")
+  const supabase = await createClient();
+  const { data: entries } = await supabase
+    .from("earnings_entries")
     .select("*")
     .eq("artist_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("occurred_at", { ascending: false });
 
-  return <EarningsView commissions={commissions ?? []} />;
+  return <EarningsView initialEntries={entries ?? []} />;
 }

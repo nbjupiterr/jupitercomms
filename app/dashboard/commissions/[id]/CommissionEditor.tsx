@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currencies";
+import { syncEarningsFromCommission } from "@/lib/earnings";
 import type { Tables } from "@/lib/supabase/database.types";
 
 type Commission = Tables<"commissions">;
@@ -50,6 +51,7 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
     e.preventDefault();
     setSaving(true);
     const supabase = createClient();
+    const price = form.price ? Number(form.price) : null;
     await supabase
       .from("commissions")
       .update({
@@ -57,10 +59,18 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
         commission_type: form.commission_type || null,
         description: form.description || null,
         client_contact: form.client_contact || null,
-        price: form.price ? Number(form.price) : null,
+        price,
         currency: form.currency,
       })
       .eq("id", commission.id);
+    await syncEarningsFromCommission(supabase, {
+      ...commission,
+      title: form.title.trim(),
+      client_name: commission.client_name,
+      price,
+      currency: form.currency,
+      updated_at: new Date().toISOString(),
+    });
     setSaving(false);
     setEditing(false);
     router.refresh();

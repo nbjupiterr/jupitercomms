@@ -1,25 +1,11 @@
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/server";
 import { BrandMark, StorysetCredit } from "@/components/Brand";
 import { ClientPage } from "@/components/client/ClientPage";
+import { getPublicPageData } from "@/lib/public-page-data";
 
 export default async function PublicQueuePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const supabase = await createClient();
-
-  const [
-    { data: artistRows },
-    { data: queue },
-    { data: gallery },
-    { data: socials },
-  ] = await Promise.all([
-    supabase.rpc("get_public_artist", { p_token: token }),
-    supabase.rpc("get_public_queue", { p_token: token }),
-    supabase.rpc("get_public_gallery", { p_token: token }),
-    supabase.rpc("get_public_socials", { p_token: token }),
-  ]);
-
-  const artist = artistRows?.[0];
+  const { artist, queue, gallery, socials } = await getPublicPageData(token);
 
   if (!artist) {
     return (
@@ -64,9 +50,9 @@ export default async function PublicQueuePage({ params }: { params: Promise<{ to
         waitlist_capacity: artist.waitlist_capacity ?? null,
         availability_override: artist.availability_override ?? null,
       }}
-      gallery={gallery ?? []}
-      socials={socials ?? []}
-      queue={queue ?? []}
+      gallery={gallery}
+      socials={socials}
+      queue={queue}
     />
   );
 }

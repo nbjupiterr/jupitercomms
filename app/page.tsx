@@ -109,7 +109,7 @@ const FeatureCard = ({
   <article className="glass rounded-2xl p-6 text-left h-full">
     <div className="flex items-start justify-between gap-3 mb-4">
       <p className="font-mono text-sm text-accent-dim tracking-wide">{index}</p>
-      <Image src={image} alt="" width={96} height={96} className="w-20 h-20 object-contain" />
+      <Image src={image} alt="" width={96} height={96} className="w-20 h-20 object-contain" loading="lazy" />
     </div>
     <h3 className="text-lg font-semibold text-navy mb-2 tracking-tight">{title}</h3>
     <p className="text-sm text-text-secondary leading-relaxed">{description}</p>

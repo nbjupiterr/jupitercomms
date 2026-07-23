@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currencies";
 import { convertAmount, formatMoney } from "@/lib/exchange-rates";
 import type { Tables } from "@/lib/supabase/database.types";
 
-type Commission = Tables<"commissions">;
+type Entry = Tables<"earnings_entries">;
 
 type RangePreset = "day" | "week" | "month" | "year" | "custom";
-
-const EARNING_STATUSES = new Set(["completed", "queued", "in_progress"]);
 
 function startOfDay(d: Date) {
   const x = new Date(d);
@@ -52,18 +52,23 @@ function toInputDate(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
-export function EarningsView({ commissions }: { commissions: Commission[] }) {
+export function EarningsView({ initialEntries }: { initialEntries: Entry[] }) {
+  const router = useRouter();
+  const [entries, setEntries] = useState(initialEntries);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setEntries(initialEntries);
+  }, [initialEntries]);
+
   const currencies = useMemo(() => {
-    const used = new Set(
-      commissions
-        .filter((c) => EARNING_STATUSES.has(c.status) && c.price != null)
-        .map((c) => c.currency || DEFAULT_CURRENCY)
-    );
+    const used = new Set(entries.map((e) => e.currency || DEFAULT_CURRENCY));
     const rest = CURRENCIES.filter((c) => !used.has(c));
     const usedOrdered = CURRENCIES.filter((c) => used.has(c));
     const extras = [...used].filter((c) => !(CURRENCIES as readonly string[]).includes(c));
     return [...usedOrdered, ...extras, ...rest];
-  }, [commissions]);
+  }, [entries]);
 
   const [currency, setCurrency] = useState<string>(DEFAULT_CURRENCY);
   const [rates, setRates] = useState<Record<string, number> | null>(null);
@@ -127,20 +132,19 @@ export function EarningsView({ commissions }: { commissions: Commission[] }) {
   const filtered = useMemo(() => {
     const from = startOfDay(new Date(fromDate + "T00:00:00"));
     const to = endOfDay(new Date(toDate + "T00:00:00"));
-    return commissions.filter((c) => {
-      if (!EARNING_STATUSES.has(c.status) || c.price == null) return false;
-      const created = new Date(c.created_at);
-      return created >= from && created <= to;
+    return entries.filter((e) => {
+      const when = new Date(e.occurred_at);
+      return when >= from && when <= to;
     });
-  }, [commissions, fromDate, toDate]);
+  }, [entries, fromDate, toDate]);
 
   const rows = useMemo(() => {
-    return filtered.map((c) => {
-      const source = c.currency || DEFAULT_CURRENCY;
-      const original = c.price ?? 0;
+    return filtered.map((entry) => {
+      const source = entry.currency || DEFAULT_CURRENCY;
+      const original = Number(entry.amount) || 0;
       const converted =
         rates != null ? convertAmount(original, source, currency, rates) : null;
-      return { commission: c, source, original, converted };
+      return { entry, source, original, converted };
     });
   }, [filtered, rates, currency]);
 
@@ -149,24 +153,35 @@ export function EarningsView({ commissions }: { commissions: Commission[] }) {
 
   const total = convertible.reduce((sum, r) => sum + (r.converted ?? 0), 0);
   const completedTotal = convertible
-    .filter((r) => r.commission.status === "completed")
+    .filter((r) => r.entry.kind === "completed")
     .reduce((sum, r) => sum + (r.converted ?? 0), 0);
   const pendingTotal = convertible
-    .filter(
-      (r) =>
-        r.commission.status === "queued" || r.commission.status === "in_progress"
-    )
+    .filter((r) => r.entry.kind === "pending")
     .reduce((sum, r) => sum + (r.converted ?? 0), 0);
 
   const money = (n: number) => formatMoney(n, currency);
+
+  const removeEntry = async (id: string) => {
+    if (confirmId !== id) {
+      setConfirmId(id);
+      return;
+    }
+    setDeletingId(id);
+    const supabase = createClient();
+    await supabase.from("earnings_entries").delete().eq("id", id);
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+    setConfirmId(null);
+    setDeletingId(null);
+    router.refresh();
+  };
 
   return (
     <div className="flex flex-col gap-5">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-navy">Earnings</h1>
         <p className="text-sm text-text-secondary mt-1 leading-relaxed max-w-xl">
-          Totals from completed work plus pending commissions still in queue or in progress.
-          Amounts convert into the currency you select.
+          A lasting ledger of priced work. Clearing the queue keeps these rows — delete them here
+          only when you want them gone.
         </p>
       </header>
 
@@ -267,7 +282,7 @@ export function EarningsView({ commissions }: { commissions: Commission[] }) {
             {ratesLoading ? "…" : money(total)}
           </p>
           <p className="text-xs text-text-muted mt-1">
-            {convertible.length} commissions
+            {convertible.length} entries
             {skipped > 0 ? ` · ${skipped} skipped` : ""}
           </p>
         </article>
@@ -282,7 +297,7 @@ export function EarningsView({ commissions }: { commissions: Commission[] }) {
           <p className="text-2xl font-semibold tracking-tight text-navy mt-1">
             {ratesLoading ? "…" : money(pendingTotal)}
           </p>
-          <p className="text-xs text-text-muted mt-1">Queue + in progress</p>
+          <p className="text-xs text-text-muted mt-1">Still open when recorded</p>
         </article>
       </div>
 
@@ -292,42 +307,94 @@ export function EarningsView({ commissions }: { commissions: Commission[] }) {
         </div>
         {filtered.length === 0 ? (
           <p className="text-sm text-text-muted px-5 py-8 text-center">
-            No priced commissions in this range.
+            No earnings in this range yet.
           </p>
         ) : (
           <ul className="divide-y divide-glass-border">
             {rows
               .slice()
-              .sort((a, b) =>
-                b.commission.created_at.localeCompare(a.commission.created_at)
-              )
-              .map(({ commission: c, source, original, converted }) => (
+              .sort((a, b) => b.entry.occurred_at.localeCompare(a.entry.occurred_at))
+              .map(({ entry, source, original, converted }) => (
                 <li
-                  key={c.id}
+                  key={entry.id}
                   className="px-5 py-3 flex items-center justify-between gap-3"
                 >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-navy truncate">{c.title}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-navy truncate">{entry.title}</p>
                     <p className="text-[11px] text-text-muted">
-                      {c.client_name} · {c.status.replace("_", " ")} ·{" "}
-                      {new Date(c.created_at).toLocaleDateString("en-US", {
+                      {entry.client_name} · {entry.kind} ·{" "}
+                      {new Date(entry.occurred_at).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
                       })}
+                      {!entry.commission_id && <> · archived</>}
                       {source !== currency && (
                         <> · {formatMoney(original, source)}</>
                       )}
                     </p>
                   </div>
-                  <span className="text-sm font-medium text-navy shrink-0 tabular-nums text-right">
-                    {converted == null ? "—" : money(converted)}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-sm font-medium text-navy tabular-nums text-right">
+                      {converted == null ? "—" : money(converted)}
+                    </span>
+                    {confirmId === entry.id ? (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => void removeEntry(entry.id)}
+                          disabled={deletingId === entry.id}
+                          className="text-[11px] font-medium text-white bg-error px-2 py-1 rounded-lg"
+                          aria-label="Confirm delete"
+                        >
+                          {deletingId === entry.id ? "…" : "Confirm"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmId(null)}
+                          className="text-[11px] text-text-muted px-1"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void removeEntry(entry.id)}
+                        className="p-1.5 rounded-lg text-text-muted hover:text-error hover:bg-error/10 transition-colors"
+                        aria-label={`Delete ${entry.title}`}
+                        title="Delete"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </li>
               ))}
           </ul>
         )}
       </section>
     </div>
+  );
+}
+
+function TrashIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </svg>
   );
 }

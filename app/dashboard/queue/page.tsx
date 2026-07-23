@@ -5,11 +5,13 @@ import { redirect } from "next/navigation";
 import { KanbanBoard } from "./KanbanBoard";
 import { QueueOverview } from "@/components/dashboard/QueueOverview";
 import { deadlinesFromEstimates, parseTat } from "@/lib/tat";
+import { getAuthUser } from "@/lib/supabase/auth";
 
 export default async function QueuePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) redirect("/login");
+
+  const supabase = await createClient();
 
   const [{ data: items }, { data: active }, { data: profile }] =
     await Promise.all([

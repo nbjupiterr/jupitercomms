@@ -27,8 +27,8 @@ export function BrandMark({ href = "/", size = "md" }: { href?: string; size?: "
         alt="Orbit"
         width={logoHeight * 2.4}
         height={logoHeight}
-        className="h-[var(--logo-h)] w-auto object-contain -my-3"
-        style={{ "--logo-h": `${logoHeight}px` } as React.CSSProperties}
+        className="h-[var(--logo-h)] w-auto max-w-none object-contain -my-3"
+        style={{ "--logo-h": `${logoHeight}px`, width: "auto", height: `${logoHeight}px` } as React.CSSProperties}
         priority
       />
       <span className={`font-normal text-text-muted ${textSize} -ml-1`}>by Jupiter</span>

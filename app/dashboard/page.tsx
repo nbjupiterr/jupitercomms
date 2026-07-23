@@ -2,12 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { HubEditor } from "@/components/hub/HubEditor";
 import type { PublicQueueItem } from "@/components/client/types";
+import { getAuthUser } from "@/lib/supabase/auth";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) redirect("/login");
 
+  const supabase = await createClient();
   const displayName =
     (user.user_metadata?.display_name as string | undefined) ||
     "Artist";

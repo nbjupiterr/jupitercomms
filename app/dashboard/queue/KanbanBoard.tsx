@@ -12,6 +12,7 @@ import {
 } from "@/lib/kanban";
 import { syncEstimatedDeadlines } from "@/lib/sync-deadlines";
 import { syncAvailabilityStatus } from "@/lib/sync-availability";
+import { syncEarningsFromCommission } from "@/lib/earnings";
 
 type Commission = Tables<"commissions">;
 
@@ -49,6 +50,11 @@ export function KanbanBoard({
     setItems((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
     const supabase = createClient();
     await supabase.from("commissions").update({ status }).eq("id", id);
+    await syncEarningsFromCommission(supabase, {
+      ...current,
+      status,
+      updated_at: new Date().toISOString(),
+    });
     await syncEstimatedDeadlines(supabase, artistId);
     await syncAvailabilityStatus(supabase, artistId);
     router.refresh();
