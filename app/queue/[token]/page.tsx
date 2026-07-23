@@ -1,7 +1,42 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { BrandMark, StorysetCredit } from "@/components/Brand";
 import { ClientPage } from "@/components/client/ClientPage";
 import { getPublicPageData } from "@/lib/public-page-data";
+
+function clientPageDescription(artistName?: string | null) {
+  const name = artistName?.trim();
+  if (!name) {
+    return "View commission prices, terms, availability, and queue status.";
+  }
+  return `Commission info for ${name} — prices, terms, availability, and queue status.`;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Metadata> {
+  const { token } = await params;
+  const { artist } = await getPublicPageData(token);
+  const name = artist?.artist_name?.trim();
+  const description = clientPageDescription(name);
+  const title = "Orbit by Jupiter - Commission Tracker";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
+  };
+}
 
 export default async function PublicQueuePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;

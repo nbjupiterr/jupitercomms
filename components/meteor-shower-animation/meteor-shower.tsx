@@ -44,7 +44,7 @@ function createMeteor(width: number, height: number): Meteor {
     y = -20;
   }
 
-  const opacity = 0.7 + Math.random() * 0.3;
+  const opacity = 0.35 + Math.random() * 0.25;
 
   return {
     x,
@@ -55,11 +55,11 @@ function createMeteor(width: number, height: number): Meteor {
     opacity,
     tail: [],
     tailLength: 15,
-    // Bundui light palette, precomputed per meteor
-    headColor: rgba(70, 90, 120, opacity),
-    tailStart: rgba(70, 90, 120, opacity),
-    tailMiddle: rgba(100, 120, 150, opacity * 0.8),
-    tailEnd: rgba(130, 150, 180, opacity * 0.1),
+    // Softer light-theme meteors
+    headColor: rgba(160, 168, 178, opacity),
+    tailStart: rgba(160, 168, 178, opacity),
+    tailMiddle: rgba(175, 182, 190, opacity * 0.75),
+    tailEnd: rgba(190, 194, 200, opacity * 0.08),
   };
 }
 
