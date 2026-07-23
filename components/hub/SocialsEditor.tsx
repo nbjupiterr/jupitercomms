@@ -142,12 +142,6 @@ export function SocialsEditor({
     void persistOrder(next);
   };
 
-  const moveBy = (index: number, delta: number) => {
-    const to = index + delta;
-    if (to < 0 || to >= ordered.length) return;
-    reorder(index, to);
-  };
-
   return (
     <div className="flex flex-col gap-5">
       <label className="flex flex-col gap-1.5">
@@ -163,7 +157,7 @@ export function SocialsEditor({
 
       <div className="flex flex-col gap-2">
         <p className="text-xs text-text-muted">
-          Drag to reorder, or use the arrows. Order matches the client page.
+          Drag to reorder. Order matches the client page.
         </p>
         {ordered.length === 0 && (
           <p className="text-sm text-text-muted">No social links yet.</p>
@@ -253,24 +247,6 @@ export function SocialsEditor({
                       <p className="text-sm text-navy truncate">{link.url}</p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        aria-label="Move up"
-                        disabled={i === 0}
-                        onClick={() => moveBy(i, -1)}
-                        className="w-7 h-7 rounded-lg text-text-muted hover:text-navy hover:bg-bg-secondary disabled:opacity-30 text-xs"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Move down"
-                        disabled={i === ordered.length - 1}
-                        onClick={() => moveBy(i, 1)}
-                        className="w-7 h-7 rounded-lg text-text-muted hover:text-navy hover:bg-bg-secondary disabled:opacity-30 text-xs"
-                      >
-                        ↓
-                      </button>
                       <button
                         type="button"
                         onClick={() => startEdit(link)}
