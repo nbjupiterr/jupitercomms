@@ -31,9 +31,11 @@ export async function generateMetadata({
       description,
       type: "website",
       siteName: "Orbit by Jupiter",
+      // No preview image — title + description only in messengers.
+      images: [],
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary",
       title,
       description,
     },
