@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PanelTabs } from "@/components/ui/PanelTabs";
-import { AvailabilityEditor } from "@/components/hub/AvailabilityEditor";
+import { AvailabilityEditor, type SlotForm } from "@/components/hub/AvailabilityEditor";
 import { GalleryEditor } from "@/components/hub/GalleryEditor";
 import { PriceTablesEditor } from "@/components/hub/PriceTablesEditor";
 import { TosEditor } from "@/components/hub/TosEditor";
@@ -12,6 +12,13 @@ import { SocialsEditor } from "@/components/hub/SocialsEditor";
 import { PublicQueueKanban } from "@/components/client/PublicQueueKanban";
 import type { PublicQueueItem } from "@/components/client/types";
 import { normalizePriceTables, type NamedPriceTable } from "@/lib/price-tables";
+import {
+  availabilityDetailLine,
+  countUsedSlots,
+  countWaitlisted,
+  parseSlotSettings,
+  resolveAvailability,
+} from "@/lib/availability";
 import type { Tables } from "@/lib/supabase/database.types";
 
 type HubTab = "availability" | "gallery" | "prices" | "tos" | "queue" | "contact";
@@ -44,6 +51,11 @@ export function HubEditor({
   const [tab, setTab] = useState<HubTab>("gallery");
   const [status, setStatus] = useState(profile.availability_status);
   const [message, setMessage] = useState(profile.availability_message ?? "");
+  const [slotForm, setSlotForm] = useState<SlotForm>({
+    capacity: profile.available_slots != null ? String(profile.available_slots) : "",
+    limitedThreshold: String(profile.limited_threshold ?? 2),
+    waitlistCapacity: String(profile.waitlist_capacity ?? 10),
+  });
   const [tos, setTos] = useState(profile.tos_markdown ?? "");
   const [email, setEmail] = useState(profile.contact_email ?? "");
   const [priceTables, setPriceTables] = useState<NamedPriceTable[]>(() =>
@@ -60,15 +72,73 @@ export function HubEditor({
     return `${window.location.origin}/queue/${profile.public_queue_token}`;
   }, [profile.public_queue_token]);
 
+  const liveSnap = useMemo(() => {
+    const capacityRaw = slotForm.capacity.trim() === "" ? null : Number(slotForm.capacity);
+    const settings = parseSlotSettings({
+      available_slots: capacityRaw != null && Number.isFinite(capacityRaw) ? capacityRaw : null,
+      limited_threshold: Number(slotForm.limitedThreshold) || 0,
+      waitlist_capacity: Number(slotForm.waitlistCapacity) || 0,
+      availability_override:
+        status === "closed" || status === "unavailable" ? status : null,
+    });
+    const statuses = queuePreview.map((q) => q.status);
+    return resolveAvailability(
+      settings,
+      countUsedSlots(statuses),
+      countWaitlisted(statuses),
+      status
+    );
+  }, [slotForm, status, queuePreview]);
+
+  const derivedHint = useMemo(() => {
+    if (!liveSnap.slotsEnabled) return null;
+    const detail = availabilityDetailLine(liveSnap);
+    return `Auto status: ${liveSnap.status.replace("_", " ")}${detail ? ` · ${detail}` : ""} · ${liveSnap.usedSlots} filling slots`;
+  }, [liveSnap]);
+
+  const handleStatusChange = (value: string) => {
+    setStatus(value);
+  };
+
   const saveProfileFields = async () => {
     setSaving(true);
     setError(null);
     const supabase = createClient();
+
+    const capacityRaw = slotForm.capacity.trim() === "" ? null : Number(slotForm.capacity);
+    const capacity =
+      capacityRaw != null && Number.isFinite(capacityRaw) && capacityRaw > 0
+        ? Math.round(capacityRaw)
+        : null;
+    const limitedThreshold = Math.max(0, Math.round(Number(slotForm.limitedThreshold) || 0));
+    const waitlistCapacity = Math.max(0, Math.round(Number(slotForm.waitlistCapacity) || 0));
+    const override =
+      status === "closed" || status === "unavailable" ? status : null;
+
+    const settings = parseSlotSettings({
+      available_slots: capacity,
+      limited_threshold: limitedThreshold,
+      waitlist_capacity: waitlistCapacity,
+      availability_override: override,
+    });
+    const statuses = queuePreview.map((q) => q.status);
+    const snap = resolveAvailability(
+      settings,
+      countUsedSlots(statuses),
+      countWaitlisted(statuses),
+      status
+    );
+    const nextStatus = snap.status;
+
     const { error: updateError } = await supabase
       .from("artist_profiles")
       .update({
-        availability_status: status,
+        availability_status: nextStatus,
         availability_message: message || null,
+        available_slots: capacity,
+        limited_threshold: capacity != null ? limitedThreshold : null,
+        waitlist_capacity: capacity != null ? waitlistCapacity : null,
+        availability_override: override,
         tos_markdown: tos || null,
         contact_email: email || null,
         price_tables: priceTables,
@@ -86,6 +156,7 @@ export function HubEditor({
       setSaving(false);
       return;
     }
+    setStatus(nextStatus);
     setSavedAt(new Date().toLocaleTimeString());
     setSaving(false);
   };
@@ -125,10 +196,14 @@ export function HubEditor({
           <div className="flex flex-col gap-4">
             <h2 className="text-sm font-semibold text-navy">Availability</h2>
             <AvailabilityEditor
-              status={status}
+              status={liveSnap.slotsEnabled ? liveSnap.status : status}
               message={message}
-              onStatusChange={setStatus}
+              slotsEnabled={Boolean(slotForm.capacity.trim())}
+              slotForm={slotForm}
+              derivedHint={derivedHint}
+              onStatusChange={handleStatusChange}
               onMessageChange={setMessage}
+              onSlotFormChange={setSlotForm}
             />
           </div>
         )}

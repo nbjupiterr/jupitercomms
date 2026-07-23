@@ -9,6 +9,13 @@ import { ContactIcons } from "@/components/client/ContactIcons";
 import { renderSimpleMarkdown } from "@/lib/markdown";
 import { galleryPublicUrl } from "@/lib/gallery";
 import { normalizePriceTables } from "@/lib/price-tables";
+import {
+  availabilityDetailLine,
+  countUsedSlots,
+  countWaitlisted,
+  parseSlotSettings,
+  resolveAvailability,
+} from "@/lib/availability";
 import type {
   PublicArtist,
   PublicGalleryItem,
@@ -59,6 +66,20 @@ export function ClientPage({
   );
   const hasPrices = priceTables.some((t) => t.rows.length > 0);
 
+  const availabilitySnap = resolveAvailability(
+    parseSlotSettings({
+      available_slots: artist.available_slots,
+      limited_threshold: artist.limited_threshold,
+      waitlist_capacity: artist.waitlist_capacity,
+      availability_override: artist.availability_override,
+    }),
+    countUsedSlots(queue.map((q) => q.status)),
+    countWaitlisted(queue.map((q) => q.status)),
+    artist.availability_status
+  );
+  const statusKey = availabilitySnap.status;
+  const detailLine = availabilityDetailLine(availabilitySnap);
+
   return (
     <div className="min-h-[100dvh] flex flex-col items-center px-4 py-8 sm:py-10">
       <div className="w-full max-w-lg flex flex-col gap-4">
@@ -74,10 +95,15 @@ export function ClientPage({
             className="w-12 h-12 mx-auto mb-2 rounded-full object-contain"
           />
           <h1 className="text-xl font-semibold tracking-tight text-navy">{artist.artist_name}</h1>
-          {artist.availability_status && (
-            <span className="status-badge bg-navy-soft text-navy inline-block mt-2">
-              Status: {AVAILABILITY_LABEL[artist.availability_status] ?? artist.availability_status}
-            </span>
+          {statusKey && (
+            <div className="mt-2 flex flex-col items-center gap-1">
+              <span className="status-badge bg-navy-soft text-navy inline-block">
+                Status: {AVAILABILITY_LABEL[statusKey] ?? statusKey}
+              </span>
+              {detailLine && (
+                <p className="text-xs text-text-muted font-medium tracking-tight">{detailLine}</p>
+              )}
+            </div>
           )}
           {artist.availability_message && (
             <p className="mt-3 text-sm text-text-secondary leading-relaxed">

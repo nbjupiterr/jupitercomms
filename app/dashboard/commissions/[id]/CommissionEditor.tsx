@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currencies";
 import type { Tables } from "@/lib/supabase/database.types";
 
 type Commission = Tables<"commissions">;
@@ -17,8 +18,6 @@ const COMMISSION_TYPES = [
   "Other",
 ];
 
-const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"];
-
 export function CommissionEditor({ commission }: { commission: Commission }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -29,7 +28,7 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
     description: commission.description ?? "",
     client_contact: commission.client_contact ?? "",
     price: commission.price?.toString() ?? "",
-    currency: commission.currency,
+    currency: commission.currency || DEFAULT_CURRENCY,
   });
 
   const set = (key: keyof typeof form, value: string) =>
@@ -42,7 +41,7 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
       description: commission.description ?? "",
       client_contact: commission.client_contact ?? "",
       price: commission.price?.toString() ?? "",
-      currency: commission.currency,
+      currency: commission.currency || DEFAULT_CURRENCY,
     });
     setEditing(false);
   };

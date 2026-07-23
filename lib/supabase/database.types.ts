@@ -32,6 +32,9 @@ export type Database = {
           public_queue_token: string
           tat_max_days: number | null
           tat_min_days: number | null
+          limited_threshold: number | null
+          waitlist_capacity: number | null
+          availability_override: string | null
           tos_markdown: string | null
           updated_at: string
           user_id: string
@@ -41,10 +44,12 @@ export type Database = {
           availability_message?: string | null
           availability_status?: string
           available_slots?: number | null
+          availability_override?: string | null
           contact_email?: string | null
           created_at?: string
           display_name?: string | null
           kanban_columns?: Json
+          limited_threshold?: number | null
           price_table?: PriceTable | Json
           price_tables?: Json
           public_queue_token?: string
@@ -53,16 +58,19 @@ export type Database = {
           tos_markdown?: string | null
           updated_at?: string
           user_id: string
+          waitlist_capacity?: number | null
         }
         Update: {
           additionals_table?: PriceTable | Json
           availability_message?: string | null
           availability_status?: string
           available_slots?: number | null
+          availability_override?: string | null
           contact_email?: string | null
           created_at?: string
           display_name?: string | null
           kanban_columns?: Json
+          limited_threshold?: number | null
           price_table?: PriceTable | Json
           price_tables?: Json
           public_queue_token?: string
@@ -71,6 +79,7 @@ export type Database = {
           tos_markdown?: string | null
           updated_at?: string
           user_id?: string
+          waitlist_capacity?: number | null
         }
         Relationships: []
       }
@@ -239,6 +248,9 @@ export type Database = {
           price_tables: Json
           tat_max_days: number | null
           tat_min_days: number | null
+          limited_threshold: number | null
+          waitlist_capacity: number | null
+          availability_override: string | null
           tos_markdown: string | null
         }[]
       }

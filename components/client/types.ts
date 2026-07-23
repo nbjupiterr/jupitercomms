@@ -14,6 +14,10 @@ export type PublicArtist = {
   kanban_columns?: KanbanColumn[] | unknown;
   tat_min_days?: number | null;
   tat_max_days?: number | null;
+  available_slots?: number | null;
+  limited_threshold?: number | null;
+  waitlist_capacity?: number | null;
+  availability_override?: string | null;
 };
 
 export type PublicGalleryItem = {

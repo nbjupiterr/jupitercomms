@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { syncEstimatedDeadlines } from "@/lib/sync-deadlines";
+import { syncAvailabilityStatus } from "@/lib/sync-availability";
+import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currencies";
 import {
   estimateForPosition,
   formatEstimate,
@@ -128,6 +130,7 @@ export default function NewCommissionPage() {
     }
 
     await syncEstimatedDeadlines(supabase, user.id, tat);
+    await syncAvailabilityStatus(supabase, user.id);
 
     router.push("/dashboard/queue");
     router.refresh();
@@ -232,13 +235,12 @@ export default function NewCommissionPage() {
               </label>
               <label className="flex flex-col gap-1.5">
                 <span className="text-sm text-text-secondary">Currency</span>
-                <select name="currency" className="field-input">
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="CAD">CAD</option>
-                  <option value="AUD">AUD</option>
-                  <option value="JPY">JPY</option>
+                <select name="currency" defaultValue={DEFAULT_CURRENCY} className="field-input">
+                  {CURRENCIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
