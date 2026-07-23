@@ -1,3 +1,5 @@
+import sanitizeHtml from "sanitize-html";
+
 /** Convert simple markdown leftovers into HTML for the rich editor. */
 export function markdownToHtml(source: string): string {
   const text = source?.trim() ?? "";
@@ -28,40 +30,15 @@ function inlineMd(line: string): string {
     .replace(/\*(.+?)\*/g, "<em>$1</em>");
 }
 
-const ALLOWED = new Set(["P", "BR", "STRONG", "B", "EM", "I", "U", "S", "H1", "H2", "H3", "UL", "OL", "LI", "DIV", "SPAN"]);
+const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: ["p", "br", "strong", "b", "em", "i", "u", "s", "h1", "h2", "h3", "ul", "ol", "li", "div", "span"],
+  allowedAttributes: {},
+  allowProtocolRelative: false,
+  disallowedTagsMode: "discard",
+};
 
-/** Strip unsafe tags/attrs for TOS HTML rendering. */
+/** Strip unsafe tags/attrs for TOS HTML rendering (works on server and client). */
 export function sanitizeTosHtml(html: string): string {
   if (!html) return "";
-  if (typeof DOMParser === "undefined") {
-    return html
-      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
-      .replace(/\son\w+="[^"]*"/gi, "")
-      .replace(/\son\w+='[^']*'/gi, "")
-      .replace(/javascript:/gi, "");
-  }
-
-  const doc = new DOMParser().parseFromString(`<div>${html}</div>`, "text/html");
-  const root = doc.body.firstElementChild;
-  if (!root) return "";
-
-  const walk = (node: Node) => {
-    const children = Array.from(node.childNodes);
-    for (const child of children) {
-      if (child.nodeType === 1) {
-        const el = child as Element;
-        if (!ALLOWED.has(el.tagName)) {
-          while (el.firstChild) node.insertBefore(el.firstChild, el);
-          node.removeChild(el);
-          continue;
-        }
-        for (const attr of Array.from(el.attributes)) {
-          el.removeAttribute(attr.name);
-        }
-        walk(el);
-      }
-    }
-  };
-  walk(root);
-  return root.innerHTML;
+  return sanitizeHtml(html, SANITIZE_OPTIONS);
 }

@@ -1,4 +1,4 @@
-import { getPlatform } from "@/lib/social-platforms";
+import { getPlatform, isSafeHref } from "@/lib/social-platforms";
 import type { PublicSocial } from "@/components/client/types";
 
 export function ContactIcons({
@@ -8,12 +8,18 @@ export function ContactIcons({
   socials: PublicSocial[];
   contactEmail: string | null;
 }) {
-  if (socials.length === 0 && !contactEmail) return null;
+  const safeSocials = socials.filter((link) => isSafeHref(link.url));
+  const safeEmail =
+    contactEmail && isSafeHref(`mailto:${contactEmail.replace(/^mailto:/i, "")}`)
+      ? contactEmail.replace(/^mailto:/i, "")
+      : null;
+
+  if (safeSocials.length === 0 && !safeEmail) return null;
 
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="flex flex-wrap justify-center gap-2.5">
-        {socials.map((link) => {
+        {safeSocials.map((link) => {
           const meta = getPlatform(link.platform);
           const Icon = meta.Icon;
           return (
@@ -29,9 +35,9 @@ export function ContactIcons({
             </a>
           );
         })}
-        {contactEmail && (
+        {safeEmail && (
           <a
-            href={`mailto:${contactEmail}`}
+            href={`mailto:${safeEmail}`}
             aria-label="Email"
             className="w-10 h-10 rounded-full border border-glass-border bg-bg-card flex items-center justify-center text-navy hover:border-navy/40 transition-colors"
           >

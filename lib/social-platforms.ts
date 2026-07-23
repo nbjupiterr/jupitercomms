@@ -55,12 +55,28 @@ export function getPlatform(id: string): SocialPlatform {
   };
 }
 
+/** True for http(s) links and mailto: only — blocks javascript: and other schemes. */
+export function isSafeHref(href: string): boolean {
+  const value = href.trim();
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    if (url.protocol === "mailto:") {
+      return Boolean(url.pathname) && !url.pathname.toLowerCase().includes("javascript:");
+    }
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 export function normalizeSocialHref(platform: string, value: string): string {
   const trimmed = value.trim();
   if (!trimmed) return "";
   if (platform === "email" || (trimmed.includes("@") && !trimmed.includes("://"))) {
-    return trimmed.startsWith("mailto:") ? trimmed : `mailto:${trimmed}`;
+    const mailto = trimmed.startsWith("mailto:") ? trimmed : `mailto:${trimmed}`;
+    return isSafeHref(mailto) ? mailto : "";
   }
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `https://${trimmed}`;
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return isSafeHref(withScheme) ? withScheme : "";
 }

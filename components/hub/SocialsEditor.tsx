@@ -31,7 +31,10 @@ export function SocialsEditor({
     e.preventDefault();
     setError(null);
     const href = normalizeSocialHref(platform, url);
-    if (!href) return;
+    if (!href) {
+      setError("Enter a valid http(s) URL.");
+      return;
+    }
     setBusy(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();

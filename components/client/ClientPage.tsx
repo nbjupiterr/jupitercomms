@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { BrandMark, StorysetCredit } from "@/components/Brand";
 import { PanelTabs } from "@/components/ui/PanelTabs";
-import { PublicQueueKanban } from "@/components/client/PublicQueueKanban";
 import { ContactIcons } from "@/components/client/ContactIcons";
 import MeteorShower from "@/components/meteor-shower-animation/meteor-shower";
 import { renderSimpleMarkdown } from "@/lib/markdown";
@@ -30,6 +30,16 @@ export type {
   PublicQueueItem,
   PublicSocial,
 } from "@/components/client/types";
+
+const PublicQueueKanban = dynamic(
+  () =>
+    import("@/components/client/PublicQueueKanban").then((m) => m.PublicQueueKanban),
+  {
+    loading: () => (
+      <p className="text-sm text-text-muted text-center py-8">Loading queue…</p>
+    ),
+  }
+);
 
 type ClientTab = "gallery" | "prices" | "tos" | "queue";
 

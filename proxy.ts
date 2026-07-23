@@ -13,7 +13,7 @@ function needsAuthCheck(pathname: string) {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Public routes skip Supabase session refresh — was adding hundreds of ms–seconds.
+  // Public routes skip Supabase session work entirely.
   if (!needsAuthCheck(pathname)) {
     return NextResponse.next({ request });
   }
@@ -41,9 +41,11 @@ export async function proxy(request: NextRequest) {
     }
   );
 
+  // Soft gate with local session read; RSC layout still verifies via getUser().
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   if (!user && pathname.startsWith("/dashboard")) {
     const url = request.nextUrl.clone();

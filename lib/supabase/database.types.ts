@@ -334,6 +334,14 @@ export type Database = {
           url: string
         }[]
       }
+      regenerate_public_queue_token: {
+        Args: Record<string, never>
+        Returns: string
+      }
+      sync_commission_deadlines: {
+        Args: { p_updates: Json }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

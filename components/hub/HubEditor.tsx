@@ -1,15 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PanelTabs } from "@/components/ui/PanelTabs";
-import { AvailabilityEditor, type SlotForm } from "@/components/hub/AvailabilityEditor";
-import { GalleryEditor } from "@/components/hub/GalleryEditor";
-import { PriceTablesEditor } from "@/components/hub/PriceTablesEditor";
-import { TosEditor } from "@/components/hub/TosEditor";
-import { SocialsEditor } from "@/components/hub/SocialsEditor";
-import { PublicQueueKanban } from "@/components/client/PublicQueueKanban";
+import type { SlotForm } from "@/components/hub/AvailabilityEditor";
 import type { PublicQueueItem } from "@/components/client/types";
 import { normalizePriceTables, type NamedPriceTable } from "@/lib/price-tables";
 import {
@@ -19,7 +15,27 @@ import {
   parseSlotSettings,
   resolveAvailability,
 } from "@/lib/availability";
+import { sanitizeTosHtml } from "@/lib/tos-html";
 import type { Tables } from "@/lib/supabase/database.types";
+
+const AvailabilityEditor = dynamic(() =>
+  import("@/components/hub/AvailabilityEditor").then((m) => m.AvailabilityEditor)
+);
+const GalleryEditor = dynamic(() =>
+  import("@/components/hub/GalleryEditor").then((m) => m.GalleryEditor)
+);
+const PriceTablesEditor = dynamic(() =>
+  import("@/components/hub/PriceTablesEditor").then((m) => m.PriceTablesEditor)
+);
+const TosEditor = dynamic(() =>
+  import("@/components/hub/TosEditor").then((m) => m.TosEditor)
+);
+const SocialsEditor = dynamic(() =>
+  import("@/components/hub/SocialsEditor").then((m) => m.SocialsEditor)
+);
+const PublicQueueKanban = dynamic(() =>
+  import("@/components/client/PublicQueueKanban").then((m) => m.PublicQueueKanban)
+);
 
 type HubTab = "availability" | "gallery" | "prices" | "tos" | "queue" | "contact";
 
@@ -139,7 +155,7 @@ export function HubEditor({
         limited_threshold: capacity != null ? limitedThreshold : null,
         waitlist_capacity: capacity != null ? waitlistCapacity : null,
         availability_override: override,
-        tos_markdown: tos || null,
+        tos_markdown: tos ? sanitizeTosHtml(tos) : null,
         contact_email: email || null,
         price_tables: priceTables,
         price_table: priceTables[0]

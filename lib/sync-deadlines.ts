@@ -30,19 +30,31 @@ export async function syncEstimatedDeadlines(
   const items = rows ?? [];
   const estimates = estimatesById(items, tat);
 
-  await Promise.all(
-    items.map((item) => {
+  const updates = items
+    .map((item) => {
       if (!isWorkStatus(item.status)) {
         if (item.status === "waitlisted") {
-          return supabase.from("commissions").update({ deadline: null }).eq("id", item.id);
+          return { id: item.id, deadline: null as string | null };
         }
-        return Promise.resolve();
+        return null;
       }
       const est = estimates.get(item.id);
-      return supabase
-        .from("commissions")
-        .update({ deadline: est?.max ?? null })
-        .eq("id", item.id);
+      return { id: item.id, deadline: est?.max ?? null };
     })
-  );
+    .filter((row): row is { id: string; deadline: string | null } => row != null);
+
+  if (updates.length === 0) return;
+
+  const { error } = await supabase.rpc("sync_commission_deadlines", {
+    p_updates: updates,
+  });
+
+  // Fallback if migration not applied yet.
+  if (error) {
+    await Promise.all(
+      updates.map((row) =>
+        supabase.from("commissions").update({ deadline: row.deadline }).eq("id", row.id)
+      )
+    );
+  }
 }

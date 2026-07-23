@@ -107,6 +107,10 @@ export default function MeteorShower({
       return;
     }
 
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
