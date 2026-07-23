@@ -1,27 +1,43 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { KanbanBoard } from "./KanbanBoard";
-import { ActivityStrip } from "@/components/dashboard/ActivityStrip";
+import { QueueOverview } from "@/components/dashboard/QueueOverview";
+import { deadlinesFromEstimates, parseTat } from "@/lib/tat";
 
 export default async function QueuePage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  const [{ data: items }, { data: active }] = await Promise.all([
-    supabase
-      .from("commissions")
-      .select("*")
-      .order("queue_order", { ascending: true, nullsFirst: false })
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("commissions")
-      .select("*")
-      .in("status", ["waitlisted", "queued", "in_progress"])
-      .order("queue_order", { ascending: true, nullsFirst: false })
-      .limit(8),
-  ]);
+  const [{ data: items }, { data: active }, { data: profile }] =
+    await Promise.all([
+      supabase
+        .from("commissions")
+        .select("*")
+        .order("queue_order", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("commissions")
+        .select("*")
+        .neq("status", "completed")
+        .order("queue_order", { ascending: true, nullsFirst: false })
+        .limit(8),
+      supabase
+        .from("artist_profiles")
+        .select("display_name, kanban_columns, tat_min_days, tat_max_days")
+        .eq("user_id", user.id)
+        .single(),
+    ]);
 
   const commissions = items ?? [];
+  const tat = parseTat(profile);
+  const deadlines = deadlinesFromEstimates(commissions, tat);
+  const displayName =
+    profile?.display_name ||
+    (user.user_metadata?.display_name as string | undefined) ||
+    "Artist";
 
   return (
     <div>
@@ -37,10 +53,14 @@ export default async function QueuePage() {
         </Link>
       </header>
 
-      <ActivityStrip items={active ?? []} />
+      <QueueOverview
+        active={active ?? []}
+        deadlines={deadlines}
+        displayName={displayName}
+      />
 
-      {commissions.length === 0 ? (
-        <div className="glass empty-state">
+      {commissions.length === 0 && (
+        <div className="glass empty-state mb-5">
           <Image
             src="/assets/solar-system-amico.svg"
             alt=""
@@ -53,9 +73,13 @@ export default async function QueuePage() {
             Create your first commission
           </Link>
         </div>
-      ) : (
-        <KanbanBoard initial={commissions} />
       )}
+
+      <KanbanBoard
+        initial={commissions}
+        initialColumns={profile?.kanban_columns}
+        artistId={user.id}
+      />
     </div>
   );
 }

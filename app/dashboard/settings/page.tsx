@@ -3,11 +3,15 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { WorkflowEditor } from "@/components/dashboard/WorkflowEditor";
+import { TatEditor } from "@/components/dashboard/TatEditor";
 import type { Tables } from "@/lib/supabase/database.types";
 
 export default function SettingsPage() {
   const [displayName, setDisplayName] = useState("");
   const [queueToken, setQueueToken] = useState<string | null>(null);
+  const [artistId, setArtistId] = useState<string | null>(null);
+  const [tatMin, setTatMin] = useState<number | null>(null);
+  const [tatMax, setTatMax] = useState<number | null>(null);
   const [stages, setStages] = useState<Tables<"workflow_stages">[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -19,11 +23,12 @@ export default function SettingsPage() {
       if (!user) return;
 
       setDisplayName(user.user_metadata?.display_name || "");
+      setArtistId(user.id);
 
       const [{ data: profile }, { data: workflowStages }] = await Promise.all([
         supabase
           .from("artist_profiles")
-          .select("public_queue_token")
+          .select("public_queue_token, tat_min_days, tat_max_days")
           .eq("user_id", user.id)
           .single(),
         supabase
@@ -33,6 +38,8 @@ export default function SettingsPage() {
       ]);
 
       setQueueToken(profile?.public_queue_token ?? null);
+      setTatMin(profile?.tat_min_days ?? null);
+      setTatMax(profile?.tat_max_days ?? null);
       setStages(workflowStages ?? []);
       setLoading(false);
     };
@@ -109,17 +116,20 @@ export default function SettingsPage() {
         </section>
       </div>
 
-      <section>
-        <header className="mb-4">
+      <section className="flex flex-col gap-6">
+        <header>
           <h2 className="text-lg font-semibold tracking-tight text-navy">Workflow</h2>
           <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-            Stages set the progress percentage shown in your queue and on the client page.
+            Stages set progress percentage. Turnaround time drives estimated delivery dates.
           </p>
         </header>
-        {loading ? (
-          <p className="text-sm text-text-muted">Loading stages…</p>
+        {loading || !artistId ? (
+          <p className="text-sm text-text-muted">Loading…</p>
         ) : (
-          <WorkflowEditor initialStages={stages} />
+          <div className="flex flex-col gap-6">
+            <WorkflowEditor initialStages={stages} />
+            <TatEditor artistId={artistId} initialMin={tatMin} initialMax={tatMax} />
+          </div>
         )}
       </section>
     </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { syncEstimatedDeadlines } from "@/lib/sync-deadlines";
 
 const STATUSES = [
   "waitlisted",
@@ -35,7 +36,11 @@ export function StatusControl({
     setValue(next);
     setSaving(true);
     const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     await supabase.from("commissions").update({ status: next }).eq("id", commissionId);
+    if (user) await syncEstimatedDeadlines(supabase, user.id);
     setSaving(false);
     router.refresh();
   };
@@ -47,7 +52,11 @@ export function StatusControl({
     }
     setDeleting(true);
     const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     await supabase.from("commissions").delete().eq("id", commissionId);
+    if (user) await syncEstimatedDeadlines(supabase, user.id);
     router.push("/dashboard/queue");
     router.refresh();
   };

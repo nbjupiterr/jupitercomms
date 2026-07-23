@@ -6,16 +6,19 @@ export function PanelTabs<T extends string>({
   tabs,
   active,
   onChange,
+  align = "start",
 }: {
   tabs: Tab<T>[];
   active: T;
   onChange: (id: T) => void;
+  /** Client view centers tabs; Hub stays start-aligned. */
+  align?: "start" | "center";
 }) {
   return (
     <div
       role="tablist"
       aria-label="Sections"
-      className="flex flex-wrap gap-1.5 justify-center sm:justify-start"
+      className={`flex flex-wrap gap-1.5 ${align === "center" ? "justify-center" : "justify-start"}`}
     >
       {tabs.map((tab) => {
         const selected = tab.id === active;

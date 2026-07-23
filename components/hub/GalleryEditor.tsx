@@ -76,7 +76,7 @@ export function GalleryEditor({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-text-muted">
-          {items.length}/{GALLERY_MAX_ITEMS} samples · auto-compressed for mobile
+          {items.length}/{GALLERY_MAX_ITEMS} samples · auto-compressed
         </p>
         <button
           type="button"
@@ -99,7 +99,16 @@ export function GalleryEditor({
       </div>
       {error && <p className="text-sm text-error">{error}</p>}
       {items.length === 0 ? (
-        <p className="text-sm text-text-muted py-6 text-center">No samples yet.</p>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Image
+            src="/assets/outer-space-pana.svg"
+            alt=""
+            width={140}
+            height={140}
+            className="w-28 h-28 mb-3 opacity-90"
+          />
+          <p className="text-sm text-text-muted">No samples yet.</p>
+        </div>
       ) : (
         <ul className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {items.map((item) => (

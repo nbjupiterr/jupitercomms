@@ -30,7 +30,6 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
     client_contact: commission.client_contact ?? "",
     price: commission.price?.toString() ?? "",
     currency: commission.currency,
-    deadline: commission.deadline ?? "",
   });
 
   const set = (key: keyof typeof form, value: string) =>
@@ -44,7 +43,6 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
       client_contact: commission.client_contact ?? "",
       price: commission.price?.toString() ?? "",
       currency: commission.currency,
-      deadline: commission.deadline ?? "",
     });
     setEditing(false);
   };
@@ -62,7 +60,6 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
         client_contact: form.client_contact || null,
         price: form.price ? Number(form.price) : null,
         currency: form.currency,
-        deadline: form.deadline || null,
       })
       .eq("id", commission.id);
     setSaving(false);
@@ -75,7 +72,7 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
       ? `${commission.currency} ${commission.price.toFixed(2)}`
       : "—";
   const deadlineText = commission.deadline
-    ? new Date(commission.deadline).toLocaleDateString("en-US", {
+    ? new Date(commission.deadline + "T12:00:00").toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -99,7 +96,7 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
         <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
           <Info label="Type" value={commission.commission_type || "—"} />
           <Info label="Price" value={money} />
-          <Info label="Deadline" value={deadlineText} />
+          <Info label="Estimated delivery" value={deadlineText} />
           <Info label="Client contact" value={commission.client_contact || "—"} />
           <div className="sm:col-span-2">
             <Info label="Description" value={commission.description || "—"} />
@@ -158,10 +155,15 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
           </select>
         </label>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm text-text-secondary">Deadline</span>
-          <input type="date" value={form.deadline} onChange={(e) => set("deadline", e.target.value)} className="field-input" />
-        </label>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm text-text-secondary">Estimated delivery</span>
+          <p className="field-input bg-bg-secondary/60 text-text-secondary">
+            {deadlineText}
+            <span className="block text-[11px] text-text-muted mt-0.5 font-normal">
+              From turnaround time + queue position (Settings → Workflow)
+            </span>
+          </p>
+        </div>
 
         <label className="flex flex-col gap-1.5 sm:col-span-2">
           <span className="text-sm text-text-secondary">Description</span>

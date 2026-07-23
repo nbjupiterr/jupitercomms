@@ -2,7 +2,6 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { BrandMark, StorysetCredit } from "@/components/Brand";
 import { ClientPage } from "@/components/client/ClientPage";
-import type { PriceTable } from "@/lib/supabase/database.types";
 
 export default async function PublicQueuePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -54,7 +53,12 @@ export default async function PublicQueuePage({ params }: { params: Promise<{ to
         availability_message: artist.availability_message,
         tos_markdown: artist.tos_markdown ?? null,
         contact_email: artist.contact_email ?? null,
-        price_table: (artist.price_table ?? { columns: ["Type", "Price"], rows: [] }) as PriceTable,
+        price_table: artist.price_table,
+        additionals_table: artist.additionals_table,
+        price_tables: artist.price_tables,
+        kanban_columns: artist.kanban_columns,
+        tat_min_days: artist.tat_min_days ?? null,
+        tat_max_days: artist.tat_max_days ?? null,
       }}
       gallery={gallery ?? []}
       socials={socials ?? []}

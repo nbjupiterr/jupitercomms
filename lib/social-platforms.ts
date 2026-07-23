@@ -1,55 +1,56 @@
-import type { LucideIcon } from "lucide-react";
 import {
-  AtSign,
-  Camera,
-  ExternalLink,
-  Gamepad2,
-  Globe,
-  Heart,
-  Image,
-  Link2,
-  Mail,
-  MessageCircle,
-  Music2,
-  Radio,
-  Send,
-  Share2,
-  Users,
-  Video,
-} from "lucide-react";
+  ArtStationIcon,
+  BlueskyIcon,
+  type BrandIcon,
+  CarrdIcon,
+  DeviantArtIcon,
+  DiscordIcon,
+  InstagramIcon,
+  KofiIcon,
+  LinkIcon,
+  MailIcon,
+  PatreonIcon,
+  TelegramIcon,
+  TikTokIcon,
+  TumblrIcon,
+  TwitchIcon,
+  VgenIcon,
+  XIcon,
+  YouTubeIcon,
+} from "@/components/icons/BrandIcons";
 
 export type SocialPlatform = {
   id: string;
   label: string;
-  Icon: LucideIcon;
+  Icon: BrandIcon;
   placeholder: string;
 };
 
 export const SOCIAL_PLATFORMS: SocialPlatform[] = [
-  { id: "instagram", label: "Instagram", Icon: Camera, placeholder: "https://instagram.com/…" },
-  { id: "twitter", label: "X / Twitter", Icon: AtSign, placeholder: "https://x.com/…" },
-  { id: "tiktok", label: "TikTok", Icon: Music2, placeholder: "https://tiktok.com/@…" },
-  { id: "bluesky", label: "Bluesky", Icon: Share2, placeholder: "https://bsky.app/profile/…" },
-  { id: "discord", label: "Discord", Icon: Gamepad2, placeholder: "https://discord.gg/…" },
-  { id: "tumblr", label: "Tumblr", Icon: Image, placeholder: "https://….tumblr.com" },
-  { id: "vgen", label: "VGen", Icon: Users, placeholder: "https://vgen.co/…" },
-  { id: "kofi", label: "Ko-fi", Icon: Heart, placeholder: "https://ko-fi.com/…" },
-  { id: "patreon", label: "Patreon", Icon: Heart, placeholder: "https://patreon.com/…" },
-  { id: "carrd", label: "Carrd", Icon: Globe, placeholder: "https://….carrd.co" },
-  { id: "deviantart", label: "DeviantArt", Icon: Image, placeholder: "https://www.deviantart.com/…" },
-  { id: "artstation", label: "ArtStation", Icon: Image, placeholder: "https://www.artstation.com/…" },
-  { id: "youtube", label: "YouTube", Icon: Video, placeholder: "https://youtube.com/@…" },
-  { id: "twitch", label: "Twitch", Icon: Radio, placeholder: "https://twitch.tv/…" },
-  { id: "telegram", label: "Telegram", Icon: Send, placeholder: "https://t.me/…" },
-  { id: "email", label: "Email", Icon: Mail, placeholder: "you@example.com" },
-  { id: "other", label: "Other", Icon: ExternalLink, placeholder: "https://…" },
+  { id: "instagram", label: "Instagram", Icon: InstagramIcon, placeholder: "https://instagram.com/…" },
+  { id: "twitter", label: "X / Twitter", Icon: XIcon, placeholder: "https://x.com/…" },
+  { id: "tiktok", label: "TikTok", Icon: TikTokIcon, placeholder: "https://tiktok.com/@…" },
+  { id: "bluesky", label: "Bluesky", Icon: BlueskyIcon, placeholder: "https://bsky.app/profile/…" },
+  { id: "discord", label: "Discord", Icon: DiscordIcon, placeholder: "https://discord.gg/…" },
+  { id: "tumblr", label: "Tumblr", Icon: TumblrIcon, placeholder: "https://….tumblr.com" },
+  { id: "vgen", label: "VGen", Icon: VgenIcon, placeholder: "https://vgen.co/…" },
+  { id: "kofi", label: "Ko-fi", Icon: KofiIcon, placeholder: "https://ko-fi.com/…" },
+  { id: "patreon", label: "Patreon", Icon: PatreonIcon, placeholder: "https://patreon.com/…" },
+  { id: "carrd", label: "Carrd", Icon: CarrdIcon, placeholder: "https://….carrd.co" },
+  { id: "deviantart", label: "DeviantArt", Icon: DeviantArtIcon, placeholder: "https://www.deviantart.com/…" },
+  { id: "artstation", label: "ArtStation", Icon: ArtStationIcon, placeholder: "https://www.artstation.com/…" },
+  { id: "youtube", label: "YouTube", Icon: YouTubeIcon, placeholder: "https://youtube.com/@…" },
+  { id: "twitch", label: "Twitch", Icon: TwitchIcon, placeholder: "https://twitch.tv/…" },
+  { id: "telegram", label: "Telegram", Icon: TelegramIcon, placeholder: "https://t.me/…" },
+  { id: "email", label: "Email", Icon: MailIcon, placeholder: "you@example.com" },
+  { id: "other", label: "Other", Icon: LinkIcon, placeholder: "https://…" },
 ];
 
 export function getPlatform(id: string): SocialPlatform {
   return SOCIAL_PLATFORMS.find((p) => p.id === id) ?? {
     id: "other",
     label: "Link",
-    Icon: Link2,
+    Icon: LinkIcon,
     placeholder: "https://…",
   };
 }

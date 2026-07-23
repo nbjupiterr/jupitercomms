@@ -19,40 +19,55 @@ export type Database = {
     Tables: {
       artist_profiles: {
         Row: {
+          additionals_table: PriceTable | Json
           availability_message: string | null
           availability_status: string
           available_slots: number | null
           contact_email: string | null
           created_at: string
           display_name: string | null
+          kanban_columns: Json
           price_table: PriceTable | Json
+          price_tables: Json
           public_queue_token: string
+          tat_max_days: number | null
+          tat_min_days: number | null
           tos_markdown: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          additionals_table?: PriceTable | Json
           availability_message?: string | null
           availability_status?: string
           available_slots?: number | null
           contact_email?: string | null
           created_at?: string
           display_name?: string | null
+          kanban_columns?: Json
           price_table?: PriceTable | Json
+          price_tables?: Json
           public_queue_token?: string
+          tat_max_days?: number | null
+          tat_min_days?: number | null
           tos_markdown?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          additionals_table?: PriceTable | Json
           availability_message?: string | null
           availability_status?: string
           available_slots?: number | null
           contact_email?: string | null
           created_at?: string
           display_name?: string | null
+          kanban_columns?: Json
           price_table?: PriceTable | Json
+          price_tables?: Json
           public_queue_token?: string
+          tat_max_days?: number | null
+          tat_min_days?: number | null
           tos_markdown?: string | null
           updated_at?: string
           user_id?: string
@@ -213,12 +228,17 @@ export type Database = {
       get_public_artist: {
         Args: { p_token: string }
         Returns: {
+          additionals_table: PriceTable | Json
           artist_name: string
           availability_message: string
           availability_status: string
           available_slots: number
           contact_email: string | null
+          kanban_columns: Json
           price_table: PriceTable | Json
+          price_tables: Json
+          tat_max_days: number | null
+          tat_min_days: number | null
           tos_markdown: string | null
         }[]
       }
