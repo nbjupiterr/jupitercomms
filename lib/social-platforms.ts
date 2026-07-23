@@ -5,6 +5,7 @@ import {
   CarrdIcon,
   DeviantArtIcon,
   DiscordIcon,
+  FacebookIcon,
   InstagramIcon,
   KofiIcon,
   LinkIcon,
@@ -28,6 +29,7 @@ export type SocialPlatform = {
 
 export const SOCIAL_PLATFORMS: SocialPlatform[] = [
   { id: "instagram", label: "Instagram", Icon: InstagramIcon, placeholder: "https://instagram.com/…" },
+  { id: "facebook", label: "Facebook", Icon: FacebookIcon, placeholder: "https://facebook.com/…" },
   { id: "twitter", label: "X / Twitter", Icon: XIcon, placeholder: "https://x.com/…" },
   { id: "tiktok", label: "TikTok", Icon: TikTokIcon, placeholder: "https://tiktok.com/@…" },
   { id: "bluesky", label: "Bluesky", Icon: BlueskyIcon, placeholder: "https://bsky.app/profile/…" },

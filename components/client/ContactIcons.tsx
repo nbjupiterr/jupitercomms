@@ -29,6 +29,7 @@ export function ContactIcons({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={meta.label}
+              title={meta.label}
               className="w-10 h-10 rounded-full border border-glass-border bg-bg-card flex items-center justify-center text-navy hover:border-navy/40 transition-colors"
             >
               <Icon className="w-4 h-4" />
@@ -39,6 +40,7 @@ export function ContactIcons({
           <a
             href={`mailto:${safeEmail}`}
             aria-label="Email"
+            title="Email"
             className="w-10 h-10 rounded-full border border-glass-border bg-bg-card flex items-center justify-center text-navy hover:border-navy/40 transition-colors"
           >
             {(() => {
