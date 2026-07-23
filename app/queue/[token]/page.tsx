@@ -29,9 +29,11 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
+      type: "website",
+      siteName: "Orbit by Jupiter",
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description,
     },

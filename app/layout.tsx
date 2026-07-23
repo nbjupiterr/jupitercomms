@@ -13,6 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ??
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://jupitercomms.vercel.app")
+  ),
   title: "Orbit by Jupiter - Commission Tracker",
   description:
     "Track commission progress, manage your queue, and share live status updates with clients.",
