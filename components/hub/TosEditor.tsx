@@ -25,12 +25,20 @@ export function TosEditor({
     onChange(ref.current?.innerHTML ?? "");
   };
 
+  const toggleHeader = () => {
+    ref.current?.focus();
+    const block = document.queryCommandValue("formatBlock").replace(/[<>]/g, "").toLowerCase();
+    const next = block === "h1" || block === "h2" || block === "h3" ? "p" : "h2";
+    document.execCommand("formatBlock", false, next);
+    onChange(ref.current?.innerHTML ?? "");
+  };
+
   const tools: { label: string; title: string; action: () => void; className?: string }[] = [
     { label: "B", title: "Bold", action: () => run("bold"), className: "font-semibold" },
     { label: "I", title: "Italic", action: () => run("italic"), className: "italic" },
     { label: "U", title: "Underline", action: () => run("underline"), className: "underline" },
     { label: "S", title: "Strikethrough", action: () => run("strikeThrough"), className: "line-through" },
-    { label: "H", title: "Header", action: () => run("formatBlock", "h2") },
+    { label: "H", title: "Header (click again for normal text)", action: toggleHeader },
     { label: "• List", title: "Bullet list", action: () => run("insertUnorderedList") },
     { label: "1. List", title: "Numbered list", action: () => run("insertOrderedList") },
   ];
