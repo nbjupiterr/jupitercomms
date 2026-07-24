@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
 
-## Getting Started
+<img src="public/assets/solar-system-pana.webp" alt="Orbit by Jupiter — commission tracker" width="100%" />
 
-First, run the development server:
+**A simple way for artists to show clients where their commission is.**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+<br />
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+<a href="https://jupitercomms.vercel.app/signup"><img src="https://img.shields.io/badge/Start_free-1e293b?style=for-the-badge" alt="Start free" /></a>
+&nbsp;
+<a href="https://jupitercomms.vercel.app"><img src="https://img.shields.io/badge/Open_Orbit-64748b?style=for-the-badge" alt="Open Orbit" /></a>
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+</div>
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Need to track your commissions?
 
-## Learn More
+Yeah. That’s basically why this exists.
 
-To learn more about Next.js, take a look at the following resources:
+You get one link to share. Clients open it anytime and see your queue, progress, prices, TOS, gallery — whatever you put up. You keep working from your board; they stop pinging you for status checks.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**→ [Make an account](https://jupitercomms.vercel.app/signup)** · already in? [Log in](https://jupitercomms.vercel.app/login)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## What’s in it
 
-## Deploy on Vercel
+<table>
+  <tr>
+    <td width="33%" align="center" valign="top">
+      <img src="public/assets/outer-space-amico.webp" alt="" width="120" /><br />
+      <strong>Live progress</strong><br />
+      <sub>Move a piece forward, clients see the % update depending on the workflow you set up.</sub>
+    </td>
+    <td width="33%" align="center" valign="top">
+      <img src="public/assets/outer-space-bro.webp" alt="" width="120" /><br />
+      <strong>Queue order</strong><br />
+      <sub>They can see who’s in progress and who’s next. Waitlist is separate so it doesn’t get confusing.</sub>
+    </td>
+    <td width="33%" align="center" valign="top">
+      <img src="public/assets/solar-system-amico.webp" alt="" width="120" /><br />
+      <strong>Your own link</strong><br />
+      <sub>Pick a username once and share something like <code>/u/yourname</code>. Way nicer than a long random URL.</sub>
+    </td>
+  </tr>
+</table>
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+<br />
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| You | Them |
+| --- | --- |
+| Edit availability, gallery, prices, TOS, socials in the Hub | Open one page, no account needed |
+| Drag commissions around on your boards | See queue number, progress, and est. finish (or — if you’re still figuring it out) |
+| Track earnings | Find how to contact you |
+| Set workflow stages so progress fills in automatically | Don’t see client emails in the queue |
+
+## Getting started
+
+1. **[Sign up](https://jupitercomms.vercel.app/signup)** (it’s free)
+2. Fill in your Hub a bit — gallery, prices, TOS, availability
+3. Claim a username in Settings and copy your link
+4. Add commissions and drag them through the queue as you go
+
+## Behind the scenes
+
+Built with Next.js + Supabase.
+
+Inspired by [Carrd](https://carrd.co) — that one-page simplicity — but made for commissions. Hub, queue, and client link live together so you’re not juggling a bunch of apps or sites, and clients aren’t getting bounced around just to check status.
+
+Art by [Storyset](https://storyset.com/cute).
+
+<div align="center">
+
+<img src="public/assets/icon.webp" alt="Orbit icon" width="56" />
+
+**Orbit by Jupiter** — do commissions without the status spam.
+
+[jupitercomms.vercel.app](https://jupitercomms.vercel.app)
+
+</div>
