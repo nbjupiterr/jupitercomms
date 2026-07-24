@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { markdownToHtml } from "@/lib/tos-html";
+import { markdownToHtml } from "@/lib/tos-markdown";
+import { sanitizeTosHtml } from "@/lib/tos-html";
 
 const HEADING_TAGS = new Set(["H1", "H2", "H3"]);
 
@@ -40,7 +41,7 @@ export function TosEditor({
 
   useEffect(() => {
     if (!ref.current || primed.current) return;
-    ref.current.innerHTML = markdownToHtml(value) || "<p><br></p>";
+    ref.current.innerHTML = sanitizeTosHtml(markdownToHtml(value) || "<p><br></p>") || "<p><br></p>";
     primed.current = true;
   }, [value]);
 

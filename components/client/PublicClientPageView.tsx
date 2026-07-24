@@ -3,6 +3,7 @@ import { BrandMark, StorysetCredit } from "@/components/Brand";
 import { ClientPage } from "@/components/client/ClientPage";
 import type { PublicArtist, PublicGalleryItem, PublicQueueItem, PublicSocial } from "@/components/client/types";
 import { getPublicPageData } from "@/lib/public-page-data";
+import { prepareTosHtml } from "@/lib/tos-html";
 
 export function clientPageDescription(artistName?: string | null) {
   const name = artistName?.trim();
@@ -68,12 +69,14 @@ export function PublicClientPageView({
   socials: PublicSocial[];
   queue: PublicQueueItem[];
 }) {
+  const tosHtml = prepareTosHtml(artist.tos_markdown);
   return (
     <ClientPage
       artist={artist}
       gallery={gallery}
       socials={socials}
       queue={queue}
+      tosHtml={tosHtml}
     />
   );
 }

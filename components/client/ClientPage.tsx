@@ -2,12 +2,11 @@
 
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { BrandMark, StorysetCredit } from "@/components/Brand";
 import { PanelTabs } from "@/components/ui/PanelTabs";
 import { ContactIcons } from "@/components/client/ContactIcons";
-import MeteorShower from "@/components/meteor-shower-animation/meteor-shower";
-import { renderSimpleMarkdown } from "@/lib/markdown";
+import { renderTosHtml } from "@/lib/markdown";
 import { galleryPublicUrl } from "@/lib/gallery";
 import { normalizePriceTables } from "@/lib/price-tables";
 import {
@@ -41,6 +40,16 @@ const PublicQueueKanban = dynamic(
   }
 );
 
+function StaticShell({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={className}>{children}</div>;
+}
+
 type ClientTab = "gallery" | "prices" | "tos" | "queue";
 
 const TABS: { id: ClientTab; label: string }[] = [
@@ -63,11 +72,14 @@ export function ClientPage({
   gallery,
   socials,
   queue,
+  tosHtml,
 }: {
   artist: PublicArtist;
   gallery: PublicGalleryItem[];
   socials: PublicSocial[];
   queue: PublicQueueItem[];
+  /** Pre-sanitized on the server — keeps sanitize-html out of the client bundle. */
+  tosHtml: string | null;
 }) {
   const [tab, setTab] = useState<ClientTab>("gallery");
   const priceTables = normalizePriceTables(
@@ -91,89 +103,101 @@ export function ClientPage({
   const statusKey = availabilitySnap.status;
   const detailLine = availabilityDetailLine(availabilitySnap);
 
-  return (
-    <MeteorShower className="min-h-[100dvh]">
-      <div className="flex flex-col items-center px-4 py-8 sm:py-10">
-        <div className="w-full max-w-lg flex flex-col gap-4">
-          <header className="text-center">
-            <div className="flex justify-center mb-4">
-              <BrandMark href="/" size="sm" />
+  const [Shell, setShell] = useState<
+    ComponentType<{ children: ReactNode; className?: string }>
+  >(() => StaticShell);
+
+  useEffect(() => {
+    let cancelled = false;
+    void import("@/components/meteor-shower-animation/meteor-shower").then((m) => {
+      if (!cancelled) setShell(() => m.default);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const page = (
+    <div className="flex flex-col items-center px-4 py-8 sm:py-10">
+      <div className="w-full max-w-lg flex flex-col gap-4">
+        <header className="text-center">
+          <div className="flex justify-center mb-4">
+            <BrandMark href="/" size="sm" />
+          </div>
+          <Image
+            src="/assets/icon.svg"
+            alt=""
+            width={56}
+            height={56}
+            className="w-12 h-12 mx-auto mb-2 rounded-full object-contain"
+          />
+          <h1 className="text-xl font-semibold tracking-tight text-navy">{artist.artist_name}</h1>
+          {statusKey && (
+            <div className="mt-2 flex flex-col items-center gap-1">
+              <span className="status-badge bg-navy-soft text-navy inline-block">
+                Status: {AVAILABILITY_LABEL[statusKey] ?? statusKey}
+              </span>
+              {detailLine && (
+                <p className="text-xs text-text-muted font-medium tracking-tight">{detailLine}</p>
+              )}
             </div>
-            <Image
-              src="/assets/icon.svg"
-              alt=""
-              width={56}
-              height={56}
-              className="w-12 h-12 mx-auto mb-2 rounded-full object-contain"
-            />
-            <h1 className="text-xl font-semibold tracking-tight text-navy">{artist.artist_name}</h1>
-            {statusKey && (
-              <div className="mt-2 flex flex-col items-center gap-1">
-                <span className="status-badge bg-navy-soft text-navy inline-block">
-                  Status: {AVAILABILITY_LABEL[statusKey] ?? statusKey}
-                </span>
-                {detailLine && (
-                  <p className="text-xs text-text-muted font-medium tracking-tight">{detailLine}</p>
-                )}
+          )}
+          {artist.availability_message && (
+            <p className="mt-3 text-sm text-text-secondary leading-relaxed">
+              {artist.availability_message}
+            </p>
+          )}
+        </header>
+
+        <ContactIcons socials={socials} contactEmail={artist.contact_email} />
+
+        <PanelTabs tabs={TABS} active={tab} onChange={setTab} align="center" />
+
+        <article className="glass-strong rounded-2xl p-5 sm:p-6 min-h-[280px]">
+          {tab === "gallery" &&
+            (gallery.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <Image
+                  src="/assets/outer-space-pana.svg"
+                  alt=""
+                  width={140}
+                  height={140}
+                  className="w-28 h-28 mb-3 opacity-90"
+                />
+                <p className="text-sm text-text-secondary">No samples yet.</p>
               </div>
-            )}
-            {artist.availability_message && (
-              <p className="mt-3 text-sm text-text-secondary leading-relaxed">
-                {artist.availability_message}
-              </p>
-            )}
-          </header>
+            ) : (
+              <ul className="columns-2 gap-2.5 [column-fill:_balance]">
+                {gallery.map((item) => (
+                  <li key={item.id} className="break-inside-avoid mb-2.5">
+                    <Image
+                      src={galleryPublicUrl(item.storage_path)}
+                      alt={item.caption || "Sample work"}
+                      width={640}
+                      height={640}
+                      sizes="(max-width:640px) 45vw, 240px"
+                      className="w-full h-auto rounded-xl bg-bg-secondary object-contain"
+                      loading="lazy"
+                    />
+                  </li>
+                ))}
+              </ul>
+            ))}
 
-          <ContactIcons socials={socials} contactEmail={artist.contact_email} />
-
-          <PanelTabs tabs={TABS} active={tab} onChange={setTab} align="center" />
-
-          <article className="glass-strong rounded-2xl p-5 sm:p-6 min-h-[280px]">
-            {tab === "gallery" && (
-              gallery.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <Image
-                    src="/assets/outer-space-pana.svg"
-                    alt=""
-                    width={140}
-                    height={140}
-                    className="w-28 h-28 mb-3 opacity-90"
-                  />
-                  <p className="text-sm text-text-secondary">No samples yet.</p>
-                </div>
-              ) : (
-                <ul className="columns-2 gap-2.5 [column-fill:_balance]">
-                  {gallery.map((item) => (
-                    <li key={item.id} className="break-inside-avoid mb-2.5">
-                      <Image
-                        src={galleryPublicUrl(item.storage_path)}
-                        alt={item.caption || "Sample work"}
-                        width={640}
-                        height={640}
-                        sizes="(max-width:640px) 45vw, 240px"
-                        className="w-full h-auto rounded-xl bg-bg-secondary object-contain"
-                        loading="lazy"
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )
-            )}
-
-            {tab === "prices" && (
-              !hasPrices && !artist.prices_description?.trim() ? (
-                <p className="text-sm text-text-secondary text-center py-8">Prices coming soon.</p>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {artist.prices_description?.trim() ? (
-                    <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">
-                      {artist.prices_description.trim()}
-                    </p>
-                  ) : null}
-                  {!hasPrices ? (
-                    <p className="text-sm text-text-secondary text-center py-4">No tables yet.</p>
-                  ) : (
-                    priceTables.map((table) => (
+          {tab === "prices" &&
+            (!hasPrices && !artist.prices_description?.trim() ? (
+              <p className="text-sm text-text-secondary text-center py-8">Prices coming soon.</p>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {artist.prices_description?.trim() ? (
+                  <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">
+                    {artist.prices_description.trim()}
+                  </p>
+                ) : null}
+                {!hasPrices ? (
+                  <p className="text-sm text-text-secondary text-center py-4">No tables yet.</p>
+                ) : (
+                  priceTables.map((table) => (
                     <div
                       key={table.id}
                       className="rounded-xl border border-glass-border bg-bg-secondary/40 overflow-hidden"
@@ -223,31 +247,27 @@ export function ClientPage({
                         </div>
                       )}
                     </div>
-                    ))
-                  )}
-                </div>
-              )
-            )}
+                  ))
+                )}
+              </div>
+            ))}
 
-            {tab === "tos" && (
-              artist.tos_markdown?.trim() ? (
-                renderSimpleMarkdown(artist.tos_markdown)
-              ) : (
-                <p className="text-sm text-text-secondary text-center py-8">No terms posted yet.</p>
-              )
-            )}
+          {tab === "tos" &&
+            (tosHtml ? (
+              renderTosHtml(tosHtml)
+            ) : (
+              <p className="text-sm text-text-secondary text-center py-8">No terms posted yet.</p>
+            ))}
 
-            {tab === "queue" && (
-              <PublicQueueKanban
-                queue={queue}
-                columns={artist.kanban_columns}
-              />
-            )}
-          </article>
+          {tab === "queue" && (
+            <PublicQueueKanban queue={queue} columns={artist.kanban_columns} />
+          )}
+        </article>
 
-          <StorysetCredit className="text-center" />
-        </div>
+        <StorysetCredit className="text-center" />
       </div>
-    </MeteorShower>
+    </div>
   );
+
+  return <Shell className="min-h-[100dvh]">{page}</Shell>;
 }

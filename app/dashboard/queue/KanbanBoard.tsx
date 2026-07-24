@@ -55,7 +55,6 @@ export function KanbanBoard({
       updated_at: new Date().toISOString(),
     });
     await syncAvailabilityStatus(supabase, artistId);
-    router.refresh();
   };
 
   const renameColumn = async (id: string, label: string) => {

@@ -5,6 +5,10 @@ import { redirect } from "next/navigation";
 import { KanbanBoard } from "./KanbanBoard";
 import { QueueOverview } from "@/components/dashboard/QueueOverview";
 import { getAuthUser } from "@/lib/supabase/auth";
+import type { Tables } from "@/lib/supabase/database.types";
+
+const QUEUE_SELECT =
+  "id, artist_id, title, client_name, status, progress_percentage, deadline, queue_order, created_at, updated_at, price, currency, commission_type, description, client_contact, workflow_stage_id";
 
 export default async function QueuePage() {
   const user = await getAuthUser();
@@ -12,27 +16,21 @@ export default async function QueuePage() {
 
   const supabase = await createClient();
 
-  const [{ data: items }, { data: active }, { data: profile }] =
-    await Promise.all([
-      supabase
-        .from("commissions")
-        .select("*")
-        .order("queue_order", { ascending: true, nullsFirst: false })
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("commissions")
-        .select("*")
-        .neq("status", "completed")
-        .order("queue_order", { ascending: true, nullsFirst: false })
-        .limit(8),
-      supabase
-        .from("artist_profiles")
-        .select("display_name, kanban_columns")
-        .eq("user_id", user.id)
-        .single(),
-    ]);
+  const [{ data: items }, { data: profile }] = await Promise.all([
+    supabase
+      .from("commissions")
+      .select(QUEUE_SELECT)
+      .order("queue_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("artist_profiles")
+      .select("display_name, kanban_columns")
+      .eq("user_id", user.id)
+      .single(),
+  ]);
 
-  const commissions = items ?? [];
+  const commissions = (items ?? []) as Tables<"commissions">[];
+  const active = commissions.filter((c) => c.status !== "completed").slice(0, 8);
   const deadlines = commissions
     .filter((c) => c.deadline && (c.status === "queued" || c.status === "in_progress"))
     .map((c) => ({ title: c.title || "Commission", deadline: c.deadline as string }));
@@ -55,11 +53,7 @@ export default async function QueuePage() {
         </Link>
       </header>
 
-      <QueueOverview
-        active={active ?? []}
-        deadlines={deadlines}
-        displayName={displayName}
-      />
+      <QueueOverview active={active} deadlines={deadlines} displayName={displayName} />
 
       {commissions.length === 0 && (
         <div className="glass empty-state mb-5">
