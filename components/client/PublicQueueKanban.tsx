@@ -1,47 +1,26 @@
 import type { PublicQueueItem } from "@/components/client/types";
 import { DEFAULT_KANBAN_COLUMNS, normalizeKanbanColumns, type KanbanColumn } from "@/lib/kanban";
-import {
-  estimateForPosition,
-  formatEstimate,
-  isWorkStatus,
-  parseTat,
-  type DateEstimate,
-  type TatSettings,
-} from "@/lib/tat";
 
 function itemKey(item: PublicQueueItem) {
-  return `${item.status}:${item.queue_position}:${item.client_name}`;
+  return `${item.status}:${item.queue_position ?? "x"}:${item.client_name}:${item.deadline ?? ""}`;
 }
 
-function workEstimates(
-  queue: PublicQueueItem[],
-  tat: TatSettings | null
-): Map<string, DateEstimate> {
-  const map = new Map<string, DateEstimate>();
-  if (!tat) return map;
-  const work = queue
-    .filter((q) => isWorkStatus(q.status))
-    .sort((a, b) => a.queue_position - b.queue_position);
-  work.forEach((item, index) => {
-    map.set(itemKey(item), estimateForPosition(index + 1, tat));
+function formatDeadline(deadline: string | null | undefined): string {
+  if (!deadline) return "—";
+  return new Date(deadline + "T12:00:00").toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
   });
-  return map;
 }
 
 export function PublicQueueKanban({
   queue,
   columns,
-  tatMin,
-  tatMax,
 }: {
   queue: PublicQueueItem[];
   columns?: KanbanColumn[] | unknown;
-  tatMin?: number | null;
-  tatMax?: number | null;
 }) {
   const cols = normalizeKanbanColumns(columns ?? DEFAULT_KANBAN_COLUMNS);
-  const tat = parseTat({ tat_min_days: tatMin, tat_max_days: tatMax });
-  const estimates = workEstimates(queue, tat);
   const hasAny = queue.length > 0;
 
   return (
@@ -67,68 +46,63 @@ export function PublicQueueKanban({
                 {items.length === 0 ? (
                   <li className="text-[11px] text-text-muted px-1 py-2">—</li>
                 ) : (
-                  items.map((item) => {
-                    const est = estimates.get(itemKey(item));
-                    return (
-                      <li
-                        key={itemKey(item)}
-                        className={`rounded-lg px-2.5 py-2 ${
-                          item.is_current
-                            ? "bg-[#3a3d3a] text-white"
-                            : col.key === "completed"
-                              ? "glass opacity-70"
-                              : "glass"
+                  items.map((item) => (
+                    <li
+                      key={itemKey(item)}
+                      className={`rounded-lg px-2.5 py-2 ${
+                        item.is_current
+                          ? "bg-[#3a3d3a] text-white"
+                          : col.key === "completed"
+                            ? "glass opacity-70"
+                            : "glass"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span
+                          className={`text-xs font-medium truncate ${
+                            item.is_current ? "text-white" : "text-navy"
+                          }`}
+                        >
+                          {item.client_name}
+                        </span>
+                        <span
+                          className={`text-[10px] font-mono shrink-0 ${
+                            item.is_current ? "text-white/70" : "text-text-muted"
+                          }`}
+                        >
+                          {item.queue_position != null ? `#${item.queue_position}` : "—"}
+                        </span>
+                      </div>
+                      <p
+                        className={`text-[10px] mt-1 ${
+                          item.is_current ? "text-white/75" : "text-text-muted"
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-1">
-                          <span
-                            className={`text-xs font-medium truncate ${
-                              item.is_current ? "text-white" : "text-navy"
+                        Est. {formatDeadline(item.deadline)}
+                      </p>
+                      {col.key !== "completed" && (
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <div
+                            className={`flex-1 h-1 rounded-full overflow-hidden ${
+                              item.is_current ? "bg-white/25" : "bg-navy-soft"
                             }`}
                           >
-                            {item.client_name}
-                          </span>
+                            <div
+                              className={`h-full rounded-full ${item.is_current ? "bg-white" : "bg-navy"}`}
+                              style={{ width: `${item.progress_percentage}%` }}
+                            />
+                          </div>
                           <span
-                            className={`text-[10px] font-mono shrink-0 ${
-                              item.is_current ? "text-white/70" : "text-text-muted"
+                            className={`text-[9px] font-mono ${
+                              item.is_current ? "text-white/80" : "text-text-muted"
                             }`}
                           >
-                            #{item.queue_position}
+                            {item.progress_percentage}%
                           </span>
                         </div>
-                        {est && (
-                          <p
-                            className={`text-[10px] mt-1 ${
-                              item.is_current ? "text-white/75" : "text-text-muted"
-                            }`}
-                          >
-                            Est. {formatEstimate(est)}
-                          </p>
-                        )}
-                        {col.key !== "completed" && (
-                          <div className="flex items-center gap-1.5 mt-1.5">
-                            <div
-                              className={`flex-1 h-1 rounded-full overflow-hidden ${
-                                item.is_current ? "bg-white/25" : "bg-navy-soft"
-                              }`}
-                            >
-                              <div
-                                className={`h-full rounded-full ${item.is_current ? "bg-white" : "bg-navy"}`}
-                                style={{ width: `${item.progress_percentage}%` }}
-                              />
-                            </div>
-                            <span
-                              className={`text-[9px] font-mono ${
-                                item.is_current ? "text-white/80" : "text-text-muted"
-                              }`}
-                            >
-                              {item.progress_percentage}%
-                            </span>
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })
+                      )}
+                    </li>
+                  ))
                 )}
               </ul>
             </div>

@@ -10,7 +10,6 @@ import {
   newKanbanColumn,
   type KanbanColumn,
 } from "@/lib/kanban";
-import { syncEstimatedDeadlines } from "@/lib/sync-deadlines";
 import { syncAvailabilityStatus } from "@/lib/sync-availability";
 import { syncEarningsFromCommission } from "@/lib/earnings";
 
@@ -55,7 +54,6 @@ export function KanbanBoard({
       status,
       updated_at: new Date().toISOString(),
     });
-    await syncEstimatedDeadlines(supabase, artistId);
     await syncAvailabilityStatus(supabase, artistId);
     router.refresh();
   };

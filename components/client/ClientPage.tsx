@@ -241,8 +241,6 @@ export function ClientPage({
               <PublicQueueKanban
                 queue={queue}
                 columns={artist.kanban_columns}
-                tatMin={artist.tat_min_days}
-                tatMax={artist.tat_max_days}
               />
             )}
           </article>

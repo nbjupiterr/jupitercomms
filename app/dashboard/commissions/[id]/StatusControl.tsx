@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { syncEstimatedDeadlines } from "@/lib/sync-deadlines";
 import { syncAvailabilityStatus } from "@/lib/sync-availability";
 import { archiveCommissionEarnings, syncEarningsFromCommission } from "@/lib/earnings";
 
@@ -51,7 +50,6 @@ export function StatusControl({
       .maybeSingle();
     if (row) await syncEarningsFromCommission(supabase, row);
     if (user) {
-      await syncEstimatedDeadlines(supabase, user.id);
       await syncAvailabilityStatus(supabase, user.id);
     }
     setSaving(false);
@@ -71,7 +69,6 @@ export function StatusControl({
     await archiveCommissionEarnings(supabase, commissionId);
     await supabase.from("commissions").delete().eq("id", commissionId);
     if (user) {
-      await syncEstimatedDeadlines(supabase, user.id);
       await syncAvailabilityStatus(supabase, user.id);
     }
     router.push("/dashboard/queue");
@@ -79,16 +76,17 @@ export function StatusControl({
   };
 
   return (
-    <div className="flex items-center gap-2 shrink-0">
+    <div className="flex items-center gap-2">
       <select
         value={value}
         onChange={(e) => updateStatus(e.target.value)}
         disabled={saving}
-        className="field-input text-sm py-1.5 pr-8 capitalize"
-        aria-label="Commission status"
+        className="text-sm border border-border rounded-lg px-3 py-1.5 bg-surface text-navy focus:outline-none focus:ring-2 focus:ring-navy/20 disabled:opacity-60"
       >
         {STATUSES.map((s) => (
-          <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+          <option key={s} value={s}>
+            {STATUS_LABELS[s]}
+          </option>
         ))}
       </select>
 

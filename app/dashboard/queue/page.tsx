@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { KanbanBoard } from "./KanbanBoard";
 import { QueueOverview } from "@/components/dashboard/QueueOverview";
-import { deadlinesFromEstimates, parseTat } from "@/lib/tat";
 import { getAuthUser } from "@/lib/supabase/auth";
 
 export default async function QueuePage() {
@@ -28,14 +27,15 @@ export default async function QueuePage() {
         .limit(8),
       supabase
         .from("artist_profiles")
-        .select("display_name, kanban_columns, tat_min_days, tat_max_days")
+        .select("display_name, kanban_columns")
         .eq("user_id", user.id)
         .single(),
     ]);
 
   const commissions = items ?? [];
-  const tat = parseTat(profile);
-  const deadlines = deadlinesFromEstimates(commissions, tat);
+  const deadlines = commissions
+    .filter((c) => c.deadline && (c.status === "queued" || c.status === "in_progress"))
+    .map((c) => ({ title: c.title || "Commission", deadline: c.deadline as string }));
   const displayName =
     profile?.display_name ||
     (user.user_metadata?.display_name as string | undefined) ||

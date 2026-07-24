@@ -13,8 +13,6 @@ export type PublicArtist = {
   price_tables?: NamedPriceTable[] | unknown;
   prices_description?: string | null;
   kanban_columns?: KanbanColumn[] | unknown;
-  tat_min_days?: number | null;
-  tat_max_days?: number | null;
   available_slots?: number | null;
   limited_threshold?: number | null;
   waitlist_capacity?: number | null;
@@ -38,6 +36,7 @@ export type PublicQueueItem = {
   is_current: boolean;
   progress_percentage: number;
   stage_name: string | null;
-  queue_position: number;
+  queue_position: number | null;
   status: string;
+  deadline: string | null;
 };

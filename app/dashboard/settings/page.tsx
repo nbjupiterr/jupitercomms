@@ -3,15 +3,12 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { WorkflowEditor } from "@/components/dashboard/WorkflowEditor";
-import { TatEditor } from "@/components/dashboard/TatEditor";
 import type { Tables } from "@/lib/supabase/database.types";
 
 export default function SettingsPage() {
   const [displayName, setDisplayName] = useState("");
   const [queueToken, setQueueToken] = useState<string | null>(null);
   const [artistId, setArtistId] = useState<string | null>(null);
-  const [tatMin, setTatMin] = useState<number | null>(null);
-  const [tatMax, setTatMax] = useState<number | null>(null);
   const [stages, setStages] = useState<Tables<"workflow_stages">[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -28,7 +25,7 @@ export default function SettingsPage() {
       const [{ data: profile }, { data: workflowStages }] = await Promise.all([
         supabase
           .from("artist_profiles")
-          .select("public_queue_token, tat_min_days, tat_max_days")
+          .select("public_queue_token")
           .eq("user_id", user.id)
           .single(),
         supabase
@@ -38,8 +35,6 @@ export default function SettingsPage() {
       ]);
 
       setQueueToken(profile?.public_queue_token ?? null);
-      setTatMin(profile?.tat_min_days ?? null);
-      setTatMax(profile?.tat_max_days ?? null);
       setStages(workflowStages ?? []);
       setLoading(false);
     };
@@ -120,16 +115,13 @@ export default function SettingsPage() {
         <header>
           <h2 className="text-lg font-semibold tracking-tight text-navy">Workflow</h2>
           <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-            Stages set progress percentage. Turnaround time drives estimated delivery dates.
+            Stages set progress percentage on commissions.
           </p>
         </header>
         {loading || !artistId ? (
           <p className="text-sm text-text-muted">Loading…</p>
         ) : (
-          <div className="flex flex-col gap-6">
-            <WorkflowEditor initialStages={stages} />
-            <TatEditor artistId={artistId} initialMin={tatMin} initialMax={tatMax} />
-          </div>
+          <WorkflowEditor initialStages={stages} />
         )}
       </section>
     </div>

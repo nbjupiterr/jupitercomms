@@ -273,8 +273,6 @@ export function HubEditor({
             <PublicQueueKanban
               queue={queuePreview}
               columns={profile.kanban_columns}
-              tatMin={profile.tat_min_days}
-              tatMax={profile.tat_max_days}
             />
           </div>
         )}

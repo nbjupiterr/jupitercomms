@@ -300,8 +300,6 @@ export type Database = {
           price_table: PriceTable | Json
           price_tables: Json
           prices_description: string | null
-          tat_max_days: number | null
-          tat_min_days: number | null
           limited_threshold: number | null
           waitlist_capacity: number | null
           availability_override: string | null
@@ -322,10 +320,11 @@ export type Database = {
         Returns: {
           artist_name: string
           client_name: string
+          deadline: string | null
           is_current: boolean
           progress_percentage: number
           stage_name: string | null
-          queue_position: number
+          queue_position: number | null
           status: string
         }[]
       }

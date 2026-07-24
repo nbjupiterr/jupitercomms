@@ -1,21 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { syncEstimatedDeadlines } from "@/lib/sync-deadlines";
 import { syncAvailabilityStatus } from "@/lib/sync-availability";
 import { syncEarningsFromCommission } from "@/lib/earnings";
 import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currencies";
-import {
-  estimateForPosition,
-  formatEstimate,
-  isWorkStatus,
-  parseTat,
-  sortWorkQueue,
-  type TatSettings,
-} from "@/lib/tat";
 
 const STATUSES = [
   "waitlisted",
@@ -46,39 +37,7 @@ export default function NewCommissionPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("queued");
-  const [tat, setTat] = useState<TatSettings | null>(null);
-  const [workCount, setWorkCount] = useState(0);
-
-  useEffect(() => {
-    const load = async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const [{ data: profile }, { data: rows }] = await Promise.all([
-        supabase
-          .from("artist_profiles")
-          .select("tat_min_days, tat_max_days")
-          .eq("user_id", user.id)
-          .single(),
-        supabase
-          .from("commissions")
-          .select("id, status, queue_order, created_at")
-          .eq("artist_id", user.id),
-      ]);
-
-      setTat(parseTat(profile));
-      setWorkCount(sortWorkQueue(rows ?? []).length);
-    };
-    void load();
-  }, []);
-
-  const estimated = useMemo(() => {
-    if (!tat || !isWorkStatus(status)) return null;
-    return estimateForPosition(workCount + 1, tat);
-  }, [tat, status, workCount]);
+  const [deadline, setDeadline] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -105,11 +64,6 @@ export default function NewCommissionPage() {
       .select("*", { count: "exact", head: true })
       .eq("artist_id", user.id);
 
-    const deadline =
-      tat && isWorkStatus(nextStatus)
-        ? estimateForPosition(workCount + 1, tat).max
-        : null;
-
     const { data: created, error: insertError } = await supabase
       .from("commissions")
       .insert({
@@ -122,7 +76,7 @@ export default function NewCommissionPage() {
         description: (form.get("description") as string) || null,
         price: priceRaw ? Number(priceRaw) : null,
         currency: form.get("currency") as string,
-        deadline,
+        deadline: deadline.trim() || null,
         queue_order: (count ?? 0) + 1,
       })
       .select(
@@ -137,7 +91,6 @@ export default function NewCommissionPage() {
     }
 
     if (created) await syncEarningsFromCommission(supabase, created);
-    await syncEstimatedDeadlines(supabase, user.id, tat);
     await syncAvailabilityStatus(supabase, user.id);
 
     router.push("/dashboard/queue");
@@ -155,7 +108,7 @@ export default function NewCommissionPage() {
 
       <h1 className="text-2xl font-semibold tracking-tight text-navy mb-2">New Commission</h1>
       <p className="text-sm text-text-secondary mb-8">
-        Capture client details and pricing. Delivery dates follow turnaround time and queue order.
+        Capture client details and pricing. Est. finish is optional — leave blank if tentative.
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -228,7 +181,7 @@ export default function NewCommissionPage() {
           </fieldset>
 
           <fieldset className="glass rounded-2xl p-6 flex flex-col gap-4">
-            <p className="text-sm font-semibold text-navy">Pricing</p>
+            <p className="text-sm font-semibold text-navy">Pricing & timing</p>
             <div className="grid sm:grid-cols-2 gap-4">
               <label className="flex flex-col gap-1.5">
                 <span className="text-sm text-text-secondary">Price</span>
@@ -252,19 +205,27 @@ export default function NewCommissionPage() {
                 </select>
               </label>
             </div>
-            <div className="rounded-xl border border-glass-border bg-bg-secondary/50 px-3 py-3">
-              <p className="text-xs text-text-muted mb-1">Estimated delivery</p>
-              <p className="text-sm font-medium text-navy">
-                {!isWorkStatus(status)
-                  ? "Only for In Queue / In Progress"
-                  : !tat
-                    ? "Set turnaround time in Settings → Workflow"
-                    : formatEstimate(estimated)}
-              </p>
-              <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
-                Based on queue position and turnaround time (first come, first serve).
-              </p>
-            </div>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm text-text-secondary">Est. finish</span>
+              <input
+                type="date"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                className="field-input"
+              />
+              <span className="text-[11px] text-text-muted leading-relaxed">
+                Optional. Leave blank if you’re not sure yet — shows as — on the client page.
+              </span>
+              {deadline ? (
+                <button
+                  type="button"
+                  onClick={() => setDeadline("")}
+                  className="text-xs text-text-muted hover:text-navy self-start underline underline-offset-2"
+                >
+                  Clear date
+                </button>
+              ) : null}
+            </label>
           </fieldset>
         </div>
 
