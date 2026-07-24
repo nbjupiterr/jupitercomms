@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/assets/solar-system-pana.webp" alt="Orbit by Jupiter — commission tracker" width="100%" />
+<img src="public/assets/solar-system-pana.webp" alt="Orbit by Jupiter — commission tracker" width="420" />
 
 **A simple way for artists to show clients where their commission is.**
 
