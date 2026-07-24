@@ -51,7 +51,7 @@ You get one link to share. Clients open it anytime and see your queue, progress,
 
 ## Getting started
 
-1. **[Sign up](https://jupitercomms.vercel.app/signup)** (it’s free)
+1. **[Sign up](https://jupitercomms.vercel.app/signup)**
 2. Fill in your Hub a bit — gallery, prices, TOS, availability
 3. Claim a username in Settings and copy your link
 4. Add commissions and drag them through the queue as you go
