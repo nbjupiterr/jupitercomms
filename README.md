@@ -18,8 +18,6 @@ Yeah. That’s basically why this exists.
 
 You get one link to share. Clients open it anytime and see your queue, progress, prices, TOS, gallery — whatever you put up. You keep working from your board; they stop pinging you for status checks.
 
-**→ [Make an account](https://jupitercomms.vercel.app/signup)** · already in? [Log in](https://jupitercomms.vercel.app/login)
-
 ## What’s in it
 
 <table>
