@@ -5,15 +5,15 @@ import {
   clientPageDescription,
   toPublicArtist,
 } from "@/components/client/PublicClientPageView";
-import { getPublicPageData } from "@/lib/public-page-data";
+import { getPublicPageDataBySlug } from "@/lib/public-page-data";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ token: string }>;
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const { token } = await params;
-  const { artist } = await getPublicPageData(token);
+  const { slug } = await params;
+  const { artist } = await getPublicPageDataBySlug(slug);
   const name = artist?.artist_name?.trim();
   const description = clientPageDescription(name);
   const title = "Orbit by Jupiter - Commission Tracker";
@@ -36,9 +36,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function PublicQueuePage({ params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params;
-  const { artist, queue, gallery, socials } = await getPublicPageData(token);
+export default async function PublicSlugPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const { artist, queue, gallery, socials } = await getPublicPageDataBySlug(slug);
 
   if (!artist) {
     return <PublicClientNotFound />;

@@ -15,6 +15,7 @@ import {
   parseSlotSettings,
   resolveAvailability,
 } from "@/lib/availability";
+import { publicClientUrl } from "@/lib/public-slug";
 import { sanitizeTosHtml } from "@/lib/tos-html";
 import type { Tables } from "@/lib/supabase/database.types";
 
@@ -85,9 +86,13 @@ export function HubEditor({
   const [error, setError] = useState<string | null>(null);
 
   const queueUrl = useMemo(() => {
-    if (typeof window === "undefined") return `/queue/${profile.public_queue_token}`;
-    return `${window.location.origin}/queue/${profile.public_queue_token}`;
-  }, [profile.public_queue_token]);
+    const origin = typeof window === "undefined" ? "" : window.location.origin;
+    return publicClientUrl({
+      slug: profile.public_slug,
+      token: profile.public_queue_token,
+      origin,
+    });
+  }, [profile.public_slug, profile.public_queue_token]);
 
   const liveSnap = useMemo(() => {
     const capacityRaw = slotForm.capacity.trim() === "" ? null : Number(slotForm.capacity);

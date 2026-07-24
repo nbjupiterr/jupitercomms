@@ -31,6 +31,7 @@ export type Database = {
           price_tables: Json
           prices_description: string | null
           public_queue_token: string
+          public_slug: string | null
           tat_max_days: number | null
           tat_min_days: number | null
           limited_threshold: number | null
@@ -55,6 +56,7 @@ export type Database = {
           price_tables?: Json
           prices_description?: string | null
           public_queue_token?: string
+          public_slug?: string | null
           tat_max_days?: number | null
           tat_min_days?: number | null
           tos_markdown?: string | null
@@ -77,6 +79,7 @@ export type Database = {
           price_tables?: Json
           prices_description?: string | null
           public_queue_token?: string
+          public_slug?: string | null
           tat_max_days?: number | null
           tat_min_days?: number | null
           tos_markdown?: string | null
@@ -339,6 +342,10 @@ export type Database = {
       }
       regenerate_public_queue_token: {
         Args: Record<string, never>
+        Returns: string
+      }
+      resolve_public_slug: {
+        Args: { p_slug: string }
         Returns: string
       }
       sync_commission_deadlines: {
