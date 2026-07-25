@@ -44,7 +44,7 @@ export function StatusControl({
     const { data: row } = await supabase
       .from("commissions")
       .select(
-        "id, artist_id, title, client_name, price, currency, status, created_at, updated_at"
+        "id, artist_id, title, client_name, price, tip, currency, status, created_at, updated_at"
       )
       .eq("id", commissionId)
       .maybeSingle();

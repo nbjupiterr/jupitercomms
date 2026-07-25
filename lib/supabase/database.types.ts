@@ -101,6 +101,7 @@ export type Database = {
           description: string | null
           id: string
           price: number | null
+          tip: number | null
           progress_percentage: number
           queue_order: number | null
           status: string
@@ -119,6 +120,7 @@ export type Database = {
           description?: string | null
           id?: string
           price?: number | null
+          tip?: number | null
           progress_percentage?: number
           queue_order?: number | null
           status?: string
@@ -137,6 +139,7 @@ export type Database = {
           description?: string | null
           id?: string
           price?: number | null
+          tip?: number | null
           progress_percentage?: number
           queue_order?: number | null
           status?: string

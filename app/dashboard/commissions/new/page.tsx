@@ -57,6 +57,7 @@ export default function NewCommissionPage() {
     }
 
     const priceRaw = form.get("price") as string;
+    const tipRaw = (form.get("tip") as string)?.trim() ?? "";
     const nextStatus = (form.get("status") as string) || status;
 
     const { count } = await supabase
@@ -75,12 +76,13 @@ export default function NewCommissionPage() {
         status: nextStatus,
         description: (form.get("description") as string) || null,
         price: priceRaw ? Number(priceRaw) : null,
+        tip: tipRaw ? Number(tipRaw) : null,
         currency: form.get("currency") as string,
         deadline: deadline.trim() || null,
         queue_order: (count ?? 0) + 1,
       })
       .select(
-        "id, artist_id, title, client_name, price, currency, status, created_at, updated_at"
+        "id, artist_id, title, client_name, price, tip, currency, status, created_at, updated_at"
       )
       .single();
 
@@ -195,6 +197,17 @@ export default function NewCommissionPage() {
                 />
               </label>
               <label className="flex flex-col gap-1.5">
+                <span className="text-sm text-text-secondary">Tip</span>
+                <input
+                  name="tip"
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  className="field-input"
+                  placeholder="Optional"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 sm:col-span-2">
                 <span className="text-sm text-text-secondary">Currency</span>
                 <select name="currency" defaultValue={DEFAULT_CURRENCY} className="field-input">
                   {CURRENCIES.map((c) => (

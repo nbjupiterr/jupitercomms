@@ -8,7 +8,7 @@ import { getAuthUser } from "@/lib/supabase/auth";
 import type { Tables } from "@/lib/supabase/database.types";
 
 const QUEUE_SELECT =
-  "id, artist_id, title, client_name, status, progress_percentage, deadline, queue_order, created_at, updated_at, price, currency, commission_type, description, client_contact, workflow_stage_id";
+  "id, artist_id, title, client_name, status, progress_percentage, deadline, queue_order, created_at, updated_at, price, tip, currency, commission_type, description, client_contact, workflow_stage_id";
 
 export default async function QueuePage() {
   const user = await getAuthUser();

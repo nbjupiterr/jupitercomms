@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currencies";
+import { CURRENCIES, DEFAULT_CURRENCY, formatCommissionMoney } from "@/lib/currencies";
 import { syncEarningsFromCommission } from "@/lib/earnings";
 import type { Tables } from "@/lib/supabase/database.types";
 
@@ -38,6 +38,7 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
     description: commission.description ?? "",
     client_contact: commission.client_contact ?? "",
     price: commission.price?.toString() ?? "",
+    tip: commission.tip?.toString() ?? "",
     currency: commission.currency || DEFAULT_CURRENCY,
     deadline: commission.deadline ?? "",
   });
@@ -52,6 +53,7 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
       description: commission.description ?? "",
       client_contact: commission.client_contact ?? "",
       price: commission.price?.toString() ?? "",
+      tip: commission.tip?.toString() ?? "",
       currency: commission.currency || DEFAULT_CURRENCY,
       deadline: commission.deadline ?? "",
     });
@@ -63,6 +65,7 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
     setSaving(true);
     const supabase = createClient();
     const price = form.price ? Number(form.price) : null;
+    const tip = form.tip.trim() ? Number(form.tip) : null;
     const deadline = form.deadline.trim() || null;
     await supabase
       .from("commissions")
@@ -72,6 +75,7 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
         description: form.description || null,
         client_contact: form.client_contact || null,
         price,
+        tip,
         currency: form.currency,
         deadline,
       })
@@ -81,6 +85,7 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
       title: form.title.trim(),
       client_name: commission.client_name,
       price,
+      tip,
       currency: form.currency,
       updated_at: new Date().toISOString(),
     });
@@ -89,10 +94,7 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
     router.refresh();
   };
 
-  const money =
-    commission.price != null
-      ? `${commission.currency} ${commission.price.toFixed(2)}`
-      : "—";
+  const money = formatCommissionMoney(commission.price, commission.tip, commission.currency);
   const deadlineText = formatDeadline(commission.deadline);
 
   if (!editing) {
@@ -160,6 +162,22 @@ export function CommissionEditor({ commission }: { commission: Commission }) {
         <label className="flex flex-col gap-1.5">
           <span className="text-sm text-text-secondary">Price</span>
           <input type="number" min={0} step={0.01} value={form.price} onChange={(e) => set("price", e.target.value)} className="field-input" placeholder="0.00" />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm text-text-secondary">Tip</span>
+          <input
+            type="number"
+            min={0}
+            step={0.01}
+            value={form.tip}
+            onChange={(e) => set("tip", e.target.value)}
+            className="field-input"
+            placeholder="Optional"
+          />
+          <span className="text-[11px] text-text-muted leading-relaxed">
+            Same currency as price. Leave blank if none.
+          </span>
         </label>
 
         <label className="flex flex-col gap-1.5">

@@ -19,6 +19,7 @@ export async function syncEarningsFromCommission(
     | "title"
     | "client_name"
     | "price"
+    | "tip"
     | "currency"
     | "status"
     | "created_at"
@@ -42,12 +43,14 @@ export async function syncEarningsFromCommission(
     .eq("commission_id", commission.id)
     .maybeSingle();
 
+  const tip = commission.tip != null && commission.tip > 0 ? commission.tip : 0;
+
   const payload = {
     artist_id: commission.artist_id,
     commission_id: commission.id,
     title: commission.title,
     client_name: commission.client_name,
-    amount: commission.price,
+    amount: commission.price + tip,
     currency: commission.currency || DEFAULT_CURRENCY,
     kind,
     occurred_at: occurredAt,
@@ -69,7 +72,7 @@ export async function archiveCommissionEarnings(
   const { data } = await supabase
     .from("commissions")
     .select(
-      "id, artist_id, title, client_name, price, currency, status, created_at, updated_at"
+      "id, artist_id, title, client_name, price, tip, currency, status, created_at, updated_at"
     )
     .eq("id", commissionId)
     .maybeSingle();
