@@ -2,15 +2,24 @@ import type { PublicQueueItem } from "@/components/client/types";
 import { DEFAULT_KANBAN_COLUMNS, normalizeKanbanColumns, type KanbanColumn } from "@/lib/kanban";
 
 function itemKey(item: PublicQueueItem) {
-  return `${item.status}:${item.queue_position ?? "x"}:${item.client_name}:${item.deadline ?? ""}`;
+  return `${item.status}:${item.queue_position ?? "x"}:${item.client_name}:${item.deadline ?? ""}:${item.completed_at ?? ""}`;
 }
 
-function formatDeadline(deadline: string | null | undefined): string {
-  if (!deadline) return "—";
-  return new Date(deadline + "T12:00:00").toLocaleDateString("en-US", {
+function formatDay(value: string | null | undefined, asDateOnly: boolean): string {
+  if (!value) return "—";
+  const d = asDateOnly ? new Date(value + "T12:00:00") : new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
   });
+}
+
+function dateLine(item: PublicQueueItem): string {
+  if (item.status === "completed") {
+    return `Completed ${formatDay(item.completed_at, false)}`;
+  }
+  return `Est. ${formatDay(item.deadline, true)}`;
 }
 
 export function PublicQueueKanban({
@@ -78,7 +87,7 @@ export function PublicQueueKanban({
                           item.is_current ? "text-white/75" : "text-text-muted"
                         }`}
                       >
-                        Est. {formatDeadline(item.deadline)}
+                        {dateLine(item)}
                       </p>
                       {col.key !== "completed" && (
                         <div className="flex items-center gap-1.5 mt-1.5">

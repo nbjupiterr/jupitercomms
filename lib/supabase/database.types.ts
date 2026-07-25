@@ -95,6 +95,7 @@ export type Database = {
           client_contact: string | null
           client_name: string
           commission_type: string | null
+          completed_at: string | null
           created_at: string
           currency: string
           deadline: string | null
@@ -114,6 +115,7 @@ export type Database = {
           client_contact?: string | null
           client_name: string
           commission_type?: string | null
+          completed_at?: string | null
           created_at?: string
           currency?: string
           deadline?: string | null
@@ -133,6 +135,7 @@ export type Database = {
           client_contact?: string | null
           client_name?: string
           commission_type?: string | null
+          completed_at?: string | null
           created_at?: string
           currency?: string
           deadline?: string | null
@@ -326,6 +329,7 @@ export type Database = {
         Returns: {
           artist_name: string
           client_name: string
+          completed_at: string | null
           deadline: string | null
           is_current: boolean
           progress_percentage: number

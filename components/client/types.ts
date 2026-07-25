@@ -39,4 +39,5 @@ export type PublicQueueItem = {
   queue_position: number | null;
   status: string;
   deadline: string | null;
+  completed_at: string | null;
 };
