@@ -19,7 +19,7 @@ function dateLine(item: PublicQueueItem): string {
   if (item.status === "completed") {
     return `Completed ${formatDay(item.completed_at, false)}`;
   }
-  return `Est. ${formatDay(item.deadline, true)}`;
+  return `Est. finish ${formatDay(item.deadline, true)}`;
 }
 
 export function PublicQueueKanban({
