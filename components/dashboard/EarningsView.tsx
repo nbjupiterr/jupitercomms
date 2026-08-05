@@ -9,7 +9,7 @@ import type { Tables } from "@/lib/supabase/database.types";
 
 type Entry = Tables<"earnings_entries">;
 
-type RangePreset = "day" | "week" | "month" | "year" | "custom";
+type RangePreset = "day" | "week" | "month" | "year" | "all" | "custom";
 
 function startOfDay(d: Date) {
   const x = new Date(d);
@@ -23,7 +23,7 @@ function endOfDay(d: Date) {
   return x;
 }
 
-function rangeForPreset(preset: RangePreset): { from: Date; to: Date } {
+function rangeForPreset(preset: Exclude<RangePreset, "all" | "custom">): { from: Date; to: Date } {
   const now = new Date();
   const to = endOfDay(now);
   if (preset === "day") return { from: startOfDay(now), to };
@@ -37,12 +37,9 @@ function rangeForPreset(preset: RangePreset): { from: Date; to: Date } {
     from.setDate(1);
     return { from, to };
   }
-  if (preset === "year") {
-    const from = startOfDay(now);
-    from.setMonth(0, 1);
-    return { from, to };
-  }
-  return { from: startOfDay(now), to };
+  const from = startOfDay(now);
+  from.setMonth(0, 1);
+  return { from, to };
 }
 
 function toInputDate(d: Date) {
@@ -123,20 +120,21 @@ export function EarningsView({ initialEntries }: { initialEntries: Entry[] }) {
 
   const applyPreset = (next: RangePreset) => {
     setPreset(next);
-    if (next === "custom") return;
+    if (next === "custom" || next === "all") return;
     const { from, to } = rangeForPreset(next);
     setFromDate(toInputDate(from));
     setToDate(toInputDate(to));
   };
 
   const filtered = useMemo(() => {
+    if (preset === "all") return entries;
     const from = startOfDay(new Date(fromDate + "T00:00:00"));
     const to = endOfDay(new Date(toDate + "T00:00:00"));
     return entries.filter((e) => {
       const when = new Date(e.occurred_at);
       return when >= from && when <= to;
     });
-  }, [entries, fromDate, toDate]);
+  }, [entries, fromDate, toDate, preset]);
 
   const rows = useMemo(() => {
     return filtered.map((entry) => {
@@ -193,6 +191,7 @@ export function EarningsView({ initialEntries }: { initialEntries: Entry[] }) {
               ["week", "Week"],
               ["month", "Month"],
               ["year", "Year"],
+              ["all", "All"],
               ["custom", "Range"],
             ] as const
           ).map(([id, label]) => (
@@ -217,11 +216,12 @@ export function EarningsView({ initialEntries }: { initialEntries: Entry[] }) {
             <input
               type="date"
               value={fromDate}
+              disabled={preset === "all"}
               onChange={(e) => {
                 setPreset("custom");
                 setFromDate(e.target.value);
               }}
-              className="field-input"
+              className="field-input disabled:opacity-50"
             />
           </label>
           <label className="flex flex-col gap-1.5">
@@ -229,11 +229,12 @@ export function EarningsView({ initialEntries }: { initialEntries: Entry[] }) {
             <input
               type="date"
               value={toDate}
+              disabled={preset === "all"}
               onChange={(e) => {
                 setPreset("custom");
                 setToDate(e.target.value);
               }}
-              className="field-input"
+              className="field-input disabled:opacity-50"
             />
           </label>
           <label className="flex flex-col gap-1.5">
@@ -307,7 +308,7 @@ export function EarningsView({ initialEntries }: { initialEntries: Entry[] }) {
         </div>
         {filtered.length === 0 ? (
           <p className="text-sm text-text-muted px-5 py-8 text-center">
-            No earnings in this range yet.
+            {preset === "all" ? "No earnings recorded yet." : "No earnings in this range yet."}
           </p>
         ) : (
           <ul className="divide-y divide-glass-border">

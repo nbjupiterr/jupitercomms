@@ -209,14 +209,22 @@ export function ClientPage({
                         <p className="text-sm text-text-secondary px-3 py-3">Empty table.</p>
                       ) : (
                         <div className="overflow-x-auto">
-                          <table className="w-full text-sm border-collapse">
+                          <table className="w-full table-fixed text-sm border-collapse">
+                            <colgroup>
+                              {table.columns.map((_, i) => (
+                                <col
+                                  key={i}
+                                  style={{ width: `${100 / table.columns.length}%` }}
+                                />
+                              ))}
+                            </colgroup>
                             <thead>
                               <tr>
                                 {table.columns.map((col, i) => (
                                   <th
                                     key={i}
-                                    className={`text-left text-xs uppercase tracking-wide text-text-muted font-semibold px-3 py-2 border-b border-glass-border ${
-                                      i > 0 ? "border-l border-glass-border" : ""
+                                    className={`text-left text-xs uppercase tracking-wide text-text-muted font-semibold px-3 py-2.5 border-b border-glass-border break-words ${
+                                      i < table.columns.length - 1 ? "border-r border-glass-border" : ""
                                     }`}
                                   >
                                     {col}
@@ -226,15 +234,14 @@ export function ClientPage({
                             </thead>
                             <tbody>
                               {table.rows.map((row, ri) => (
-                                <tr
-                                  key={ri}
-                                  className="border-b border-glass-border/70 last:border-b-0"
-                                >
+                                <tr key={ri}>
                                   {row.map((cell, ci) => (
                                     <td
                                       key={ci}
-                                      className={`px-3 py-2.5 text-navy align-top ${
-                                        ci > 0 ? "border-l border-glass-border" : ""
+                                      className={`px-3 py-2.5 text-navy align-middle break-words ${
+                                        ri < table.rows.length - 1 ? "border-b border-glass-border" : ""
+                                      } ${
+                                        ci < table.columns.length - 1 ? "border-r border-glass-border" : ""
                                       }`}
                                     >
                                       {cell}
