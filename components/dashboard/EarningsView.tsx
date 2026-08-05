@@ -187,11 +187,11 @@ export function EarningsView({ initialEntries }: { initialEntries: Entry[] }) {
         <div className="flex flex-wrap gap-2">
           {(
             [
-              ["day", "Day"],
-              ["week", "Week"],
-              ["month", "Month"],
-              ["year", "Year"],
               ["all", "All"],
+              ["year", "Year"],
+              ["month", "Month"],
+              ["week", "Week"],
+              ["day", "Day"],
               ["custom", "Range"],
             ] as const
           ).map(([id, label]) => (
