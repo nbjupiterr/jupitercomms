@@ -8,7 +8,7 @@ import {
   galleryPublicUrl,
   prepareGalleryImage,
 } from "@/lib/gallery";
-import { ReorderButtons, usePointerReorder } from "@/components/hub/usePointerReorder";
+import { usePointerReorder } from "@/components/hub/usePointerReorder";
 import type { Tables } from "@/lib/supabase/database.types";
 
 type GalleryItem = Tables<"gallery_items">;
@@ -23,7 +23,6 @@ export function GalleryEditor({
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 
   const ordered = useMemo(
     () => [...items].sort((a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at)),
@@ -99,10 +98,6 @@ export function GalleryEditor({
   };
 
   const remove = async (item: GalleryItem) => {
-    if (confirmRemoveId !== item.id) {
-      setConfirmRemoveId(item.id);
-      return;
-    }
     setError(null);
     setBusy(true);
     try {
@@ -117,7 +112,6 @@ export function GalleryEditor({
         .eq("id", item.id);
       if (deleteError) throw deleteError;
       onChange(items.filter((i) => i.id !== item.id));
-      setConfirmRemoveId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not remove photo.");
     } finally {
@@ -130,7 +124,7 @@ export function GalleryEditor({
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-text-muted">
           {items.length}/{GALLERY_MAX_ITEMS} samples · auto-compressed
-          {items.length > 1 ? " · drag handle or ▲▼ to reorder" : ""}
+          {items.length > 1 ? " · drag to reorder" : ""}
         </p>
         <button
           type="button"
@@ -183,47 +177,31 @@ export function GalleryEditor({
                 className="object-cover pointer-events-none"
                 draggable={false}
               />
-              <span className="absolute top-2 left-2 text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-navy/70 text-white tabular-nums z-10 pointer-events-none">
-                {i + 1}
-              </span>
-              <div className="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-1.5 p-2 bg-gradient-to-t from-navy/70 to-transparent pt-10">
-                {ordered.length > 1 ? (
+              <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
+                {ordered.length > 1 && (
                   <button
                     type="button"
                     aria-label="Drag to reorder"
-                    className="min-h-11 min-w-11 rounded-lg bg-white/95 text-navy text-base leading-none touch-none cursor-grab active:cursor-grabbing shadow-sm"
+                    className="text-[11px] px-1.5 py-1 rounded-lg bg-navy/80 text-white/90 select-none leading-none touch-none cursor-grab active:cursor-grabbing"
                     style={{ touchAction: "none" }}
                     {...bindHandle(i)}
                   >
                     ⋮⋮
                   </button>
-                ) : (
-                  <span />
                 )}
-                <div className="flex items-end gap-1.5">
-                  {ordered.length > 1 && (
-                    <ReorderButtons
-                      index={i}
-                      count={ordered.length}
-                      onMove={reorder}
-                      variant="inline"
-                    />
-                  )}
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={() => void remove(item)}
-                    className={`min-h-11 px-3 rounded-lg text-sm font-medium shadow-sm ${
-                      confirmRemoveId === item.id
-                        ? "bg-error text-white"
-                        : "bg-white/95 text-error"
-                    }`}
-                  >
-                    {confirmRemoveId === item.id ? "Confirm" : "Remove"}
-                  </button>
-                </div>
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-navy/70 text-white tabular-nums pointer-events-none">
+                  {i + 1}
+                </span>
               </div>
+              <button
+                type="button"
+                disabled={busy}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => void remove(item)}
+                className="absolute top-2 right-2 z-10 text-[11px] px-2 py-1 rounded-lg bg-navy/80 text-white opacity-100"
+              >
+                Remove
+              </button>
             </li>
           ))}
         </ul>

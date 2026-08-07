@@ -7,7 +7,7 @@ import {
   getPlatform,
   normalizeSocialHref,
 } from "@/lib/social-platforms";
-import { ReorderButtons, usePointerReorder } from "@/components/hub/usePointerReorder";
+import { usePointerReorder } from "@/components/hub/usePointerReorder";
 import type { Tables } from "@/lib/supabase/database.types";
 
 type SocialLink = Tables<"social_links">;
@@ -164,7 +164,7 @@ export function SocialsEditor({
 
       <div className="flex flex-col gap-2">
         <p className="text-xs text-text-muted">
-          Drag the handle or use ▲▼ to reorder. Order matches the client page.
+          Drag to reorder. Order matches the client page.
         </p>
         {ordered.length === 0 && (
           <p className="text-sm text-text-muted">No social links yet.</p>
@@ -226,31 +226,22 @@ export function SocialsEditor({
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 sm:gap-3">
-                    {ordered.length > 1 && (
+                    {ordered.length > 1 ? (
                       <button
                         type="button"
                         aria-label="Drag to reorder"
-                        className="text-text-muted shrink-0 select-none leading-none text-sm w-9 h-9 rounded-lg border border-glass-border bg-bg-secondary touch-none cursor-grab active:cursor-grabbing"
+                        className="text-text-muted shrink-0 select-none leading-none text-sm px-1 py-2 -ml-1 touch-none cursor-grab active:cursor-grabbing"
                         style={{ touchAction: "none" }}
                         {...bindHandle(i)}
                       >
                         ⋮⋮
                       </button>
-                    )}
+                    ) : null}
                     <Icon className="w-4 h-4 text-navy shrink-0" aria-hidden />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs text-text-muted">{meta.label}</p>
                       <p className="text-sm text-navy truncate">{link.url}</p>
                     </div>
-                    {ordered.length > 1 && (
-                      <ReorderButtons
-                        index={i}
-                        count={ordered.length}
-                        onMove={reorder}
-                        variant="inline"
-                        className="shrink-0"
-                      />
-                    )}
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         type="button"
