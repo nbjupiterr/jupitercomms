@@ -32,5 +32,12 @@ export const TelegramIcon = icon("M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 1
 /** Stylized V — VGen is not in Simple Icons. */
 export const VgenIcon = icon("M4.5 4h4.2L12 14.2 15.3 4h4.2L13.6 20h-3.2L4.5 4z");
 export const CarrdIcon = icon("M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm2 4v2h12V8H6zm0 4v2h8v-2H6z");
+/** Stacked dots — Linktree’s common monochrome mark. */
+export const LinktreeIcon = icon(
+  "M12 1.75a2.25 2.25 0 1 1 0 4.5 2.25 2.25 0 0 1 0-4.5zm0 8a2.25 2.25 0 1 1 0 4.5 2.25 2.25 0 0 1 0-4.5zm0 8a2.25 2.25 0 1 1 0 4.5 2.25 2.25 0 0 1 0-4.5z"
+);
+export const WebsiteIcon = icon(
+  "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
+);
 export const MailIcon = icon("M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z");
 export const LinkIcon = icon("M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z");

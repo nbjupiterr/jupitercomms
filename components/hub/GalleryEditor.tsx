@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   GALLERY_MAX_ITEMS,
@@ -22,6 +22,13 @@ export function GalleryEditor({
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+
+  const ordered = useMemo(
+    () => [...items].sort((a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at)),
+    [items]
+  );
 
   const upload = async (file: File) => {
     setError(null);
@@ -72,11 +79,31 @@ export function GalleryEditor({
     onChange(items.filter((i) => i.id !== item.id));
   };
 
+  const persistOrder = async (next: GalleryItem[]) => {
+    const withOrder = next.map((item, i) => ({ ...item, sort_order: i }));
+    onChange(withOrder);
+    const supabase = createClient();
+    await Promise.all(
+      withOrder.map((item) =>
+        supabase.from("gallery_items").update({ sort_order: item.sort_order }).eq("id", item.id)
+      )
+    );
+  };
+
+  const reorder = (from: number, to: number) => {
+    if (from === to) return;
+    const next = [...ordered];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    void persistOrder(next);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-text-muted">
           {items.length}/{GALLERY_MAX_ITEMS} samples · auto-compressed
+          {items.length > 1 ? " · drag to reorder" : ""}
         </p>
         <button
           type="button"
@@ -98,7 +125,7 @@ export function GalleryEditor({
         />
       </div>
       {error && <p className="text-sm text-error">{error}</p>}
-      {items.length === 0 ? (
+      {ordered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <Image
             src="/assets/outer-space-pana.svg"
@@ -111,18 +138,45 @@ export function GalleryEditor({
         </div>
       ) : (
         <ul className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {items.map((item) => (
-            <li key={item.id} className="relative group rounded-xl overflow-hidden border border-glass-border bg-bg-secondary aspect-square">
+          {ordered.map((item, i) => (
+            <li
+              key={item.id}
+              draggable
+              onDragStart={() => setDragIndex(i)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (i !== overIndex) setOverIndex(i);
+              }}
+              onDrop={() => {
+                if (dragIndex !== null) reorder(dragIndex, i);
+                setDragIndex(null);
+                setOverIndex(null);
+              }}
+              onDragEnd={() => {
+                setDragIndex(null);
+                setOverIndex(null);
+              }}
+              className={`relative group rounded-xl overflow-hidden border bg-bg-secondary aspect-square cursor-grab active:cursor-grabbing transition-colors ${
+                overIndex === i && dragIndex !== null && dragIndex !== i
+                  ? "border-accent ring-2 ring-accent/30"
+                  : "border-glass-border"
+              } ${dragIndex === i ? "opacity-50" : ""}`}
+            >
               <Image
                 src={galleryPublicUrl(item.storage_path)}
                 alt={item.caption || "Sample"}
                 fill
                 sizes="(max-width:640px) 45vw, 180px"
-                className="object-cover"
+                className="object-cover pointer-events-none"
+                draggable={false}
               />
+              <span className="absolute top-2 left-2 text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-navy/70 text-white tabular-nums">
+                {i + 1}
+              </span>
               <button
                 type="button"
                 onClick={() => void remove(item)}
+                onPointerDown={(e) => e.stopPropagation()}
                 className="absolute top-2 right-2 text-[11px] px-2 py-1 rounded-lg bg-navy/80 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
               >
                 Remove
