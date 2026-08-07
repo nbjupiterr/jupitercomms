@@ -1,13 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   GALLERY_MAX_ITEMS,
   galleryPublicUrl,
   prepareGalleryImage,
 } from "@/lib/gallery";
+import { ReorderButtons, usePointerReorder } from "@/components/hub/usePointerReorder";
 import type { Tables } from "@/lib/supabase/database.types";
 
 type GalleryItem = Tables<"gallery_items">;
@@ -22,13 +23,39 @@ export function GalleryEditor({
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [overIndex, setOverIndex] = useState<number | null>(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 
   const ordered = useMemo(
     () => [...items].sort((a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at)),
     [items]
   );
+
+  const persistOrder = useCallback(
+    async (next: GalleryItem[]) => {
+      const withOrder = next.map((item, i) => ({ ...item, sort_order: i }));
+      onChange(withOrder);
+      const supabase = createClient();
+      await Promise.all(
+        withOrder.map((item) =>
+          supabase.from("gallery_items").update({ sort_order: item.sort_order }).eq("id", item.id)
+        )
+      );
+    },
+    [onChange]
+  );
+
+  const reorder = useCallback(
+    (from: number, to: number) => {
+      if (from === to) return;
+      const next = [...ordered];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      void persistOrder(next);
+    },
+    [ordered, persistOrder]
+  );
+
+  const { activeIndex, overIndex, bindHandle } = usePointerReorder(reorder);
 
   const upload = async (file: File) => {
     setError(null);
@@ -72,30 +99,30 @@ export function GalleryEditor({
   };
 
   const remove = async (item: GalleryItem) => {
+    if (confirmRemoveId !== item.id) {
+      setConfirmRemoveId(item.id);
+      return;
+    }
     setError(null);
-    const supabase = createClient();
-    await supabase.storage.from("gallery").remove([item.storage_path]);
-    await supabase.from("gallery_items").delete().eq("id", item.id);
-    onChange(items.filter((i) => i.id !== item.id));
-  };
-
-  const persistOrder = async (next: GalleryItem[]) => {
-    const withOrder = next.map((item, i) => ({ ...item, sort_order: i }));
-    onChange(withOrder);
-    const supabase = createClient();
-    await Promise.all(
-      withOrder.map((item) =>
-        supabase.from("gallery_items").update({ sort_order: item.sort_order }).eq("id", item.id)
-      )
-    );
-  };
-
-  const reorder = (from: number, to: number) => {
-    if (from === to) return;
-    const next = [...ordered];
-    const [moved] = next.splice(from, 1);
-    next.splice(to, 0, moved);
-    void persistOrder(next);
+    setBusy(true);
+    try {
+      const supabase = createClient();
+      const { error: storageError } = await supabase.storage
+        .from("gallery")
+        .remove([item.storage_path]);
+      if (storageError) throw storageError;
+      const { error: deleteError } = await supabase
+        .from("gallery_items")
+        .delete()
+        .eq("id", item.id);
+      if (deleteError) throw deleteError;
+      onChange(items.filter((i) => i.id !== item.id));
+      setConfirmRemoveId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not remove photo.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -103,7 +130,7 @@ export function GalleryEditor({
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-text-muted">
           {items.length}/{GALLERY_MAX_ITEMS} samples · auto-compressed
-          {items.length > 1 ? " · drag to reorder" : ""}
+          {items.length > 1 ? " · drag handle or ▲▼ to reorder" : ""}
         </p>
         <button
           type="button"
@@ -141,26 +168,12 @@ export function GalleryEditor({
           {ordered.map((item, i) => (
             <li
               key={item.id}
-              draggable
-              onDragStart={() => setDragIndex(i)}
-              onDragOver={(e) => {
-                e.preventDefault();
-                if (i !== overIndex) setOverIndex(i);
-              }}
-              onDrop={() => {
-                if (dragIndex !== null) reorder(dragIndex, i);
-                setDragIndex(null);
-                setOverIndex(null);
-              }}
-              onDragEnd={() => {
-                setDragIndex(null);
-                setOverIndex(null);
-              }}
-              className={`relative group rounded-xl overflow-hidden border bg-bg-secondary aspect-square cursor-grab active:cursor-grabbing transition-colors ${
-                overIndex === i && dragIndex !== null && dragIndex !== i
+              data-reorder-index={i}
+              className={`relative group rounded-xl overflow-hidden border bg-bg-secondary aspect-square transition-colors ${
+                overIndex === i && activeIndex !== null && activeIndex !== i
                   ? "border-accent ring-2 ring-accent/30"
                   : "border-glass-border"
-              } ${dragIndex === i ? "opacity-50" : ""}`}
+              } ${activeIndex === i ? "opacity-50" : ""}`}
             >
               <Image
                 src={galleryPublicUrl(item.storage_path)}
@@ -170,17 +183,47 @@ export function GalleryEditor({
                 className="object-cover pointer-events-none"
                 draggable={false}
               />
-              <span className="absolute top-2 left-2 text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-navy/70 text-white tabular-nums">
+              <span className="absolute top-2 left-2 text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-navy/70 text-white tabular-nums z-10 pointer-events-none">
                 {i + 1}
               </span>
-              <button
-                type="button"
-                onClick={() => void remove(item)}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="absolute top-2 right-2 text-[11px] px-2 py-1 rounded-lg bg-navy/80 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-              >
-                Remove
-              </button>
+              <div className="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-1.5 p-2 bg-gradient-to-t from-navy/70 to-transparent pt-10">
+                {ordered.length > 1 ? (
+                  <button
+                    type="button"
+                    aria-label="Drag to reorder"
+                    className="min-h-11 min-w-11 rounded-lg bg-white/95 text-navy text-base leading-none touch-none cursor-grab active:cursor-grabbing shadow-sm"
+                    style={{ touchAction: "none" }}
+                    {...bindHandle(i)}
+                  >
+                    ⋮⋮
+                  </button>
+                ) : (
+                  <span />
+                )}
+                <div className="flex items-end gap-1.5">
+                  {ordered.length > 1 && (
+                    <ReorderButtons
+                      index={i}
+                      count={ordered.length}
+                      onMove={reorder}
+                      variant="inline"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => void remove(item)}
+                    className={`min-h-11 px-3 rounded-lg text-sm font-medium shadow-sm ${
+                      confirmRemoveId === item.id
+                        ? "bg-error text-white"
+                        : "bg-white/95 text-error"
+                    }`}
+                  >
+                    {confirmRemoveId === item.id ? "Confirm" : "Remove"}
+                  </button>
+                </div>
+              </div>
             </li>
           ))}
         </ul>

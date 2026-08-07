@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   SOCIAL_PLATFORMS,
   getPlatform,
   normalizeSocialHref,
 } from "@/lib/social-platforms";
+import { ReorderButtons, usePointerReorder } from "@/components/hub/usePointerReorder";
 import type { Tables } from "@/lib/supabase/database.types";
 
 type SocialLink = Tables<"social_links">;
@@ -34,8 +35,6 @@ export function SocialsEditor({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPlatform, setEditPlatform] = useState("instagram");
   const [editUrl, setEditUrl] = useState("");
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [overIndex, setOverIndex] = useState<number | null>(null);
 
   const platformOptions = SOCIAL_PLATFORMS.filter((p) => p.id !== "email");
 
@@ -123,24 +122,32 @@ export function SocialsEditor({
     onLinksChange(links.filter((l) => l.id !== id));
   };
 
-  const persistOrder = async (next: SocialLink[]) => {
-    const withOrder = next.map((link, i) => ({ ...link, sort_order: i }));
-    onLinksChange(withOrder);
-    const supabase = createClient();
-    await Promise.all(
-      withOrder.map((link) =>
-        supabase.from("social_links").update({ sort_order: link.sort_order }).eq("id", link.id)
-      )
-    );
-  };
+  const persistOrder = useCallback(
+    async (next: SocialLink[]) => {
+      const withOrder = next.map((link, i) => ({ ...link, sort_order: i }));
+      onLinksChange(withOrder);
+      const supabase = createClient();
+      await Promise.all(
+        withOrder.map((link) =>
+          supabase.from("social_links").update({ sort_order: link.sort_order }).eq("id", link.id)
+        )
+      );
+    },
+    [onLinksChange]
+  );
 
-  const reorder = (from: number, to: number) => {
-    if (from === to) return;
-    const next = [...ordered];
-    const [moved] = next.splice(from, 1);
-    next.splice(to, 0, moved);
-    void persistOrder(next);
-  };
+  const reorder = useCallback(
+    (from: number, to: number) => {
+      if (from === to) return;
+      const next = [...ordered];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      void persistOrder(next);
+    },
+    [ordered, persistOrder]
+  );
+
+  const { activeIndex, overIndex, bindHandle } = usePointerReorder(reorder);
 
   return (
     <div className="flex flex-col gap-5">
@@ -157,7 +164,7 @@ export function SocialsEditor({
 
       <div className="flex flex-col gap-2">
         <p className="text-xs text-text-muted">
-          Drag to reorder. Order matches the client page.
+          Drag the handle or use ▲▼ to reorder. Order matches the client page.
         </p>
         {ordered.length === 0 && (
           <p className="text-sm text-text-muted">No social links yet.</p>
@@ -171,28 +178,12 @@ export function SocialsEditor({
             return (
               <li
                 key={link.id}
-                draggable={!isEditing}
-                onDragStart={() => !isEditing && setDragIndex(i)}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  if (i !== overIndex) setOverIndex(i);
-                }}
-                onDrop={() => {
-                  if (dragIndex !== null) reorder(dragIndex, i);
-                  setDragIndex(null);
-                  setOverIndex(null);
-                }}
-                onDragEnd={() => {
-                  setDragIndex(null);
-                  setOverIndex(null);
-                }}
+                data-reorder-index={i}
                 className={`rounded-xl border px-3 py-2.5 transition-colors ${
-                  overIndex === i && dragIndex !== null && dragIndex !== i
+                  overIndex === i && activeIndex !== null && activeIndex !== i
                     ? "border-accent bg-accent/5"
                     : "border-glass-border"
-                } ${dragIndex === i ? "opacity-50" : ""} ${
-                  isEditing ? "" : "cursor-grab active:cursor-grabbing"
-                }`}
+                } ${activeIndex === i ? "opacity-50" : ""}`}
               >
                 {isEditing ? (
                   <div className="flex flex-col gap-2">
@@ -235,17 +226,31 @@ export function SocialsEditor({
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <span
-                      className="text-text-muted shrink-0 select-none leading-none text-sm"
-                      aria-hidden
-                    >
-                      ⋮⋮
-                    </span>
+                    {ordered.length > 1 && (
+                      <button
+                        type="button"
+                        aria-label="Drag to reorder"
+                        className="text-text-muted shrink-0 select-none leading-none text-sm w-9 h-9 rounded-lg border border-glass-border bg-bg-secondary touch-none cursor-grab active:cursor-grabbing"
+                        style={{ touchAction: "none" }}
+                        {...bindHandle(i)}
+                      >
+                        ⋮⋮
+                      </button>
+                    )}
                     <Icon className="w-4 h-4 text-navy shrink-0" aria-hidden />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs text-text-muted">{meta.label}</p>
                       <p className="text-sm text-navy truncate">{link.url}</p>
                     </div>
+                    {ordered.length > 1 && (
+                      <ReorderButtons
+                        index={i}
+                        count={ordered.length}
+                        onMove={reorder}
+                        variant="inline"
+                        className="shrink-0"
+                      />
+                    )}
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         type="button"
