@@ -16,7 +16,7 @@ import {
   resolveAvailability,
 } from "@/lib/availability";
 import { publicClientUrl } from "@/lib/public-slug";
-import { sanitizeTosHtml } from "@/lib/tos-html";
+import { isTosHtmlEmpty, sanitizeTosHtml } from "@/lib/tos-html";
 import type { Tables } from "@/lib/supabase/database.types";
 
 const AvailabilityEditor = dynamic(() =>
@@ -161,7 +161,7 @@ export function HubEditor({
         limited_threshold: capacity != null ? limitedThreshold : null,
         waitlist_capacity: capacity != null ? waitlistCapacity : null,
         availability_override: override,
-        tos_markdown: tos ? sanitizeTosHtml(tos) : null,
+        tos_markdown: isTosHtmlEmpty(tos) ? null : sanitizeTosHtml(tos),
         contact_email: email || null,
         prices_description: pricesDescription.trim() || null,
         price_tables: priceTables,
@@ -262,7 +262,13 @@ export function HubEditor({
 
         {tab === "tos" && (
           <div className="flex flex-col gap-4">
-            <h2 className="text-sm font-semibold text-navy">Terms of service</h2>
+            <div className="flex flex-col gap-1">
+              <h2 className="text-sm font-semibold text-navy">Terms of service</h2>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Spell out payment, revisions, turnaround, and rights. Use the section chips to
+                drop in starters, then edit them to match how you work.
+              </p>
+            </div>
             <TosEditor value={tos} onChange={setTos} />
           </div>
         )}
