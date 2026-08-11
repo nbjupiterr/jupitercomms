@@ -239,7 +239,7 @@ export function TosEditor({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="rounded-xl border border-glass-border bg-bg-secondary/50 p-2.5 flex flex-col gap-2.5">
+      <div className="rounded-xl border border-glass-border bg-bg-secondary/50 p-2.5">
         <div className="flex flex-wrap items-center gap-1.5">
           {tools.map((tool) => {
             const isOn = Boolean(active[tool.id]);
@@ -259,14 +259,11 @@ export function TosEditor({
               </button>
             );
           })}
-        </div>
-
-        <div className="border-t border-glass-border pt-2.5">
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={insertSection}
-            className="btn-ghost text-xs px-2.5 py-1.5"
+            className="btn-ghost text-sm px-2.5 py-1.5"
             title="Insert a blank section heading and list"
           >
             + Insert section
