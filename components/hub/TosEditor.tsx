@@ -14,44 +14,7 @@ type ToolId =
   | "ul"
   | "ol";
 
-type SectionTemplate = {
-  id: string;
-  label: string;
-  html: string;
-};
-
-const SECTION_TEMPLATES: SectionTemplate[] = [
-  {
-    id: "payment",
-    label: "Payment",
-    html: `<h2>Payment</h2><ul><li>A deposit is required before work begins.</li><li>The remaining balance is due before final files are delivered.</li><li>Prices are listed on my prices page and may change for future slots.</li></ul>`,
-  },
-  {
-    id: "revisions",
-    label: "Revisions",
-    html: `<h2>Revisions</h2><ul><li>Each commission includes a set number of revision rounds (see your invoice / agreement).</li><li>Major changes after approval may be quoted as an add-on.</li><li>Please gather feedback in one message when you can.</li></ul>`,
-  },
-  {
-    id: "turnaround",
-    label: "Turnaround",
-    html: `<h2>Turnaround</h2><ul><li>Estimated finish dates are shown on the queue when available.</li><li>Complex pieces, illness, or holidays can shift timelines — I’ll update you if that happens.</li><li>Rush slots, if offered, are priced separately.</li></ul>`,
-  },
-  {
-    id: "cancellation",
-    label: "Cancellation",
-    html: `<h2>Cancellation &amp; refunds</h2><ul><li>If you cancel before work starts, the deposit may be refundable minus any payment fees.</li><li>If work has started, the deposit is generally non-refundable.</li><li>I may cancel and refund unused work if communication stalls for a long time.</li></ul>`,
-  },
-  {
-    id: "rights",
-    label: "Usage rights",
-    html: `<h2>Usage rights</h2><ul><li>Personal use is included unless we agree otherwise in writing.</li><li>Commercial / merch / AI training rights need a separate license.</li><li>I may showcase the work in my portfolio and socials unless you request privacy.</li></ul>`,
-  },
-  {
-    id: "communication",
-    label: "Communication",
-    html: `<h2>Communication</h2><ul><li>Please keep commission chat in the channel we agreed on.</li><li>Check your queue link for progress updates.</li><li>Be respectful — harassment or bad-faith behavior can end the commission.</li></ul>`,
-  },
-];
+const BLANK_SECTION_HTML = `<h2>Section title</h2><ul><li><br></li></ul>`;
 
 function closestBlock(node: Node | null, root: HTMLElement): HTMLElement | null {
   let current: Node | null = node;
@@ -218,12 +181,12 @@ export function TosEditor({
     emit();
   };
 
-  const insertTemplate = (template: SectionTemplate) => {
+  const insertSection = () => {
     const root = ref.current;
     if (!root) return;
     root.focus();
 
-    const chunk = sanitizeTosHtml(template.html);
+    const chunk = sanitizeTosHtml(BLANK_SECTION_HTML);
     if (!chunk) return;
 
     if (isTosHtmlEmpty(root.innerHTML)) {
@@ -231,6 +194,18 @@ export function TosEditor({
     } else {
       document.execCommand("insertHTML", false, chunk);
     }
+
+    // Select "Section title" so they can type their own heading right away.
+    const headings = root.querySelectorAll("h2");
+    const heading = headings[headings.length - 1];
+    if (heading) {
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(heading);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+
     emit();
   };
 
@@ -286,24 +261,16 @@ export function TosEditor({
           })}
         </div>
 
-        <div className="flex flex-col gap-1.5 border-t border-glass-border pt-2.5">
-          <p className="text-[11px] uppercase tracking-wide text-text-muted px-0.5">
-            Insert section
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {SECTION_TEMPLATES.map((template) => (
-              <button
-                key={template.id}
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => insertTemplate(template)}
-                className="btn-ghost text-xs px-2.5 py-1"
-                title={`Insert “${template.label}” starter section`}
-              >
-                + {template.label}
-              </button>
-            ))}
-          </div>
+        <div className="border-t border-glass-border pt-2.5">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={insertSection}
+            className="btn-ghost text-xs px-2.5 py-1.5"
+            title="Insert a blank section heading and list"
+          >
+            + Insert section
+          </button>
         </div>
       </div>
 
@@ -313,7 +280,7 @@ export function TosEditor({
             className="pointer-events-none absolute inset-0 z-0 px-4 py-3 text-sm text-text-muted leading-relaxed"
             aria-hidden
           >
-            Write your terms here — or insert a section above to start.
+            Write your terms here — or use Insert section to start one.
             <br />
             Clients see this on your public page.
           </div>

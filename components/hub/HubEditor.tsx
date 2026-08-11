@@ -265,8 +265,8 @@ export function HubEditor({
             <div className="flex flex-col gap-1">
               <h2 className="text-sm font-semibold text-navy">Terms of service</h2>
               <p className="text-xs text-text-muted leading-relaxed">
-                Spell out payment, revisions, turnaround, and rights. Use the section chips to
-                drop in starters, then edit them to match how you work.
+                Write your own terms however you like. Use Insert section to add a heading and
+                list, then rename and fill it in.
               </p>
             </div>
             <TosEditor value={tos} onChange={setTos} />
